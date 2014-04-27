@@ -1,0 +1,33 @@
+{
+  "name": "Locabuddies",
+  "version": "0.0.1",
+  "description": "Share a URL and get your friends on a map, with their local times.",
+  "main": "app.js",
+  "keywords": [
+    "geo",
+    "timezone",
+    "collaboration"
+  ],
+  "author": "Beau Lebens",
+  "license": "GPLv3",
+  "dependencies": {
+    "express.io": "1.1.13",
+    "crypto": "0.0.3",
+    "timezoner": "0.1.7",
+    "backbone": "1.1.2",
+    "request": "2.34.0",
+    "moment": "2.6.0",
+    "mongo": "0.1.0"
+  },
+  "scripts": {
+    "start": "node app.js"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/beaulebens/locabuddies.git"
+  },
+  "bugs": {
+    "url": "https://github.com/beaulebens/locabuddies/issues"
+  }
+}

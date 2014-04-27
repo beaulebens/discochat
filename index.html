@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Locabuddies</title>
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALYRkmz9NQ_FkosV3uRHgLiZZY5KCsYqQ&sensor=true"></script>
+	<script src="//code.jquery.com/jquery-latest.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/lib/daynightoverlay.min.js"></script>
+	<style>
+		html {
+			height: 100%;
+		}
+		body {
+			height: 100%;
+			margin: 0;
+			padding: 0;
+		}
+		#map {
+			width: 100%;
+			height: 100%;
+		}
+		.background {
+			-webkit-filter: blur(5px);
+			-moz-filter: blur(5px);
+			-o-filter: blur(5px);
+			-ms-filter: blur(5px);
+		}
+		#greet {
+			display: none;
+			padding: 1em;
+			width: 250px;
+			height: 150px;
+			position: absolute;
+			top: 100px;
+			left: 100px;
+			background: #eee;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="map"></div>
+	<div id="greet">
+		<h2>Who are you?</h2>
+		<form id="email-form">
+			<input type="text" id="email" placeholder="Email address...">
+			<input type="submit" id="submit" value="Go">
+		</form>
+	</div>
+	<script>
+		jQuery(function($){
+			io = io.connect();
+
+			var me = {},
+				users = [],
+				room,
+				$emailForm = $( '#email-form' ),
+				$email = $( '#email' ),
+				$map = $( '#map' ),
+				$greet = $( '#greet' );
+
+			// Render the map, with my current location as center
+			var map;
+			navigator.geolocation.getCurrentPosition( function( loc ) {
+				// Store reference to my location
+				me.location = [ loc.coords.latitude, loc.coords.longitude ];
+
+				// Set up the map and center it on me
+				var mapOptions = {
+					center: new google.maps.LatLng( loc.coords.latitude, loc.coords.longitude ),
+					zoom: 8
+				};
+				map = new google.maps.Map( document.getElementById( 'map' ), mapOptions );
+
+				// Add a day/night overlay
+				new DayNightOverlay( { map: map } );
+
+				// Now watch for refinements to location and send updates to the server
+				/*
+				navigator.geolocation.watchPosition( function( loc ) {
+					me.location = [ loc.coords.latitude, loc.coords.longitude ];
+					io.emit( 'user details', me );
+				}
+				*/
+			});
+
+			// Check for room id and Greet if none
+			// URL parsing-technique from http://tutorialzine.com/2013/07/quick-tip-parse-urls/
+			var url = $( '<a>', { href: document.location.href } )[0];
+			var path = url.pathname.split( '/' );
+			path.shift(); // Get rid of the first one, which is always empty
+
+			// Display the modal to get their email
+			if ( path.length === 1 && '' === path[0] ) {
+				// Generate a room and add it to the url
+				room = randomStr( 32 ); // md5-sh
+				window.history.pushState( '', document.title, '/' + room );
+			} else {
+				room = path[0];
+			}
+
+			// If we don't know who this is yet, let's ask
+			if ( !me.email ) {
+				$map.addClass( 'background' );
+				$greet.show();
+				$email.focus();
+			}
+
+			// Handle the greet form - won't actually happen until it's submitted
+			$emailForm.on( 'submit', function( e ) {
+				e.preventDefault();
+
+				// Get email and clear the form
+				me.email = $email.val();
+				$email.val( '' );
+
+				// Send "Me" to the server
+				io.emit( 'user', { user: me, room: room } );
+
+				$greet.hide();
+				$map.removeClass( 'background' );
+			});
+
+			// Connect to room and render everyone
+			io.emit( 'ready', room );
+
+			// Handle updates to user information
+			io.on( 'user', function( data ) {
+				// update map
+				console.log( 'Received:', data );
+			});
+		});
+
+		var pinUsers = function( user ) {
+			_.forEach( users, function( user ) {
+				pinUser( user );
+			});
+		}
+
+		var pinUser = function( user ) {
+			// Create custom marker (pin + gravatar)
+			var marker = new google.maps.Marker( {
+				position: new google.maps.LatLng( user.location[0], user.location[1] ),
+				map: map,
+				clickable: true
+			} );
+
+			// Create window to attach to marker
+			var infoWin = new google.maps.InfoWindow( {
+				content: userInfoContent( user ),
+				position: new google.maps.LatLng( user.location[0], user.location[1] ),
+				pixelOffset: new google.maps.Size( 0, 0 ),
+				maxWidth : 300
+			} );
+		}
+
+		var userInfoContent = function( user ) {
+
+		}
+
+		// @source: http://stackoverflow.com/questions/1349404/generate-a-string-of-5-random-characters-in-javascript
+
+		function randomStr(m) {
+			var m = m || 9; s = '', r = '1234567890abcdef'; // hex-ish
+			for (var i=0; i < m; i++) { s += r.charAt(Math.floor(Math.random()*r.length)); }
+			return s;
+		};
+	</script>
+</body>
+</html>
