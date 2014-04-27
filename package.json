@@ -1,5 +1,5 @@
 {
-  "name": "Locabuddies",
+  "name": "MapChat",
   "version": "0.0.1",
   "description": "Share a URL and get your friends on a map, with their local times.",
   "main": "app.js",

@@ -1,9 +1,9 @@
-var Locabuddies = {};
+var MapChat = {};
 
-Locabuddies.User = Backbone.Model.extend({
-	
+MapChat.User = Backbone.Model.extend({
+
 });
 
-Locabuddies.Users = Backbone.Collection.extend({
-	
+MapChat.Users = Backbone.Collection.extend({
+
 });

@@ -1,5 +1,5 @@
 var expio = require( 'express.io' ),
-	app   = expio();
+		app= expio();
 app.http().io();
 app.use( expio.static( __dirname + '/www' ) );
 
@@ -37,7 +37,7 @@ app.io.route( 'user', function( req ) {
 			opts = {
 				url: url,
 				headers: {
-					'User-Agent': 'Locabuddies' // User agent is required for Gravatar profiles requests
+					'User-Agent': 'MapChat' // User agent is required for Gravatar profiles requests
 				}
 			};
 		request( opts, function( err, res, body ) {
@@ -75,4 +75,4 @@ app.io.route( 'user', function( req ) {
 
 // Let's go
 app.listen( port );
-console.log( 'Locabuddies is running on http://localhost:' + port );
+console.log( 'MapChat is running on http://localhost:' + port );
