@@ -3,12 +3,12 @@ var expio = require( 'express.io' ),
 app.http().io();
 app.use( expio.static( __dirname + '/www' ) );
 
-var request = require( 'request' ),
-	crypto  = require( 'crypto/md5' ),
-	tz      = require( 'timezoner' ),
-	moment  = require( 'moment' );
+var request = require( 'request'    ),
+		crypto  = require( 'crypto/md5' ),
+		tz      = require( 'timezoner'  ),
+		moment  = require( 'moment'     );
 
-// This is needed if the app is run on heroku:
+// This is needed if the app is run on heroku
 var port = process.env.PORT || 8888;
 
 // For all requests, send back our index
@@ -18,9 +18,10 @@ app.all( '*', function( req, res ) {
 
 // Ready event sent when we know which room we want to connect to
 app.io.route( 'ready', function( req ) {
-	console.log( 'User connected to room: ' + req.data );
+	console.log( 'Connected to: ' + req.data );
 
-	// @todo Load current members from DB and send, or peer to peer somehow?
+	// @todo Load current members from DB and send them back to the connecting user
+	// @todo Send back previous 'x' chat messages (after users)
 
 	req.io.join( req.data );
 });
@@ -37,7 +38,7 @@ app.io.route( 'user', function( req ) {
 			opts = {
 				url: url,
 				headers: {
-					'User-Agent': 'MapChat' // User agent is required for Gravatar profiles requests
+					'User-Agent': 'MapChat/0.0.1' // User agent is required for Gravatar profiles requests
 				}
 			};
 		request( opts, function( err, res, body ) {
@@ -75,4 +76,4 @@ app.io.route( 'user', function( req ) {
 
 // Let's go
 app.listen( port );
-console.log( 'MapChat is running on http://localhost:' + port );
+console.log( 'MapChat accepting clients on http://localhost:' + port + '/' );

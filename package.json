@@ -11,13 +11,14 @@
   "author": "Beau Lebens",
   "license": "GPLv3",
   "dependencies": {
-    "express.io": "1.1.13",
-    "crypto": "0.0.3",
-    "timezoner": "0.1.7",
     "backbone": "1.1.2",
-    "request": "2.34.0",
+    "crypto": "0.0.3",
+    "express.io": "1.1.13",
     "moment": "2.6.0",
-    "mongo": "0.1.0"
+    "mongo": "0.1.0",
+    "request": "2.34.0",
+    "requirejs": "^2.1.11",
+    "timezoner": "0.1.7"
   },
   "scripts": {
     "start": "node app.js"
