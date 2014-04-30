@@ -33,11 +33,12 @@ MapChat.App = ( function( $, Backbone, _ ) {
       this.io     = options.io; // required
       this.me     = options.me     || new MapChat.Person();
       this.people = options.people || new MapChat.People( [ this.me ] );
+      this.room   = this.getRoom();
       this.map    = new MapChat.MapView({
         me:     this.me,
-        people: this.people
+        people: this.people,
+        el:     '#mc-map'
       });
-      this.room   = this.getRoom();
       window.history.pushState( '', 'MapChat', '/' + this.room );
 
       // Connect to room and render everyone
@@ -67,7 +68,7 @@ MapChat.App = ( function( $, Backbone, _ ) {
 
     getRoom: function( options ) {
       console.log( 'App:getRoom' );
-      // Check for room id and Greet if none
+      // Check for room id in URL
       // URL parsing-technique from http://tutorialzine.com/2013/07/quick-tip-parse-urls/
       var url  = $( '<a>', { href: document.location.href } )[0];
       var path = url.pathname.split( '/' );
@@ -95,7 +96,7 @@ MapChat.App = ( function( $, Backbone, _ ) {
       // Send "Me" to the server if an email is set
       if ( this.me.get( 'email' ).length ) {
         console.log( ' - sending ' + this.me.get( 'email' ) );
-        this.io.emit( 'user', {
+        this.io.emit( 'join', {
           user: this.me.toJSON(),
           room: this.room
         });
@@ -109,7 +110,7 @@ MapChat.App = ( function( $, Backbone, _ ) {
       // If we don't know who this is yet, let's ask
       if ( ! this.me.get( 'email' ).length ) {
         Backbone.trigger( 'disable-app' );
-        var greet = new MapChat.GreetView( { el: $( '#mc-greet' ), me: this.me } ).render();
+        new MapChat.GreetView( { el: $( '#mc-greet' ), me: this.me } ).render();
       }
     }
   });
@@ -126,12 +127,12 @@ MapChat.MapView = ( function( $, Backbone, _ ) {
       this.people = options.people;
 
       // Set up listeners
+      this.listenTo( Backbone,    'disable-app', this.disableApp );
+      this.listenTo( Backbone,    'enable-app',  this.enableApp  );
       this.listenTo( this.people, 'add',         this.redrawMap  );
       this.listenTo( this.people, 'remove',      this.redrawMap  );
       this.listenTo( this.people, 'change',      this.redrawMap  );
       this.listenTo( this.me,     'change',      this.redrawMap  );
-      this.listenTo( Backbone,    'disable-app', this.disableApp );
-      this.listenTo( Backbone,    'enable-app',  this.enableApp  );
     },
 
     disableApp: function() {
@@ -204,6 +205,14 @@ MapChat.MapView = ( function( $, Backbone, _ ) {
       }
     },
 
+    drawOverlay: function( map ) {
+      console.log( 'MapView:drawOverlay' );
+      map = map || this.map;
+      // @todo This reduces the flash of "white", but we still get a pulsing effect during redraw
+      $( '#mc-overlay' ).fadeOut( 'fast', function() { this.remove(); } );
+      this.overlay = new DayNightOverlay( { map: map, id: 'mc-overlay' } );
+    },
+
     render: function() {
       console.log( 'MapView:render' );
       // Set up the map and center it on 0,0 for now
@@ -213,12 +222,21 @@ MapChat.MapView = ( function( $, Backbone, _ ) {
       };
       this.map = new google.maps.Map( document.getElementById( this.id ), mapOptions );
 
-      // Add a day/night overlay to show what's dark and light
-      this.overlay = new DayNightOverlay( { map: this.map } );
+      var that = this;
+
+      // Draw the overlay now, and schedle it to redraw periodically to
+      // keep it moving on open sessions.
+      this.drawOverlay();
+      this.redrawOverlay = setInterval( function() {
+        that.drawOverlay();
+      }, 600000 );
 
       // Immediately kick off a request to try to get the viewing user's location
-      var that = this;
-      navigator.geolocation.getCurrentPosition( function(loc,fail){that.handleLocation(loc,fail);} );
+      // @uses var that from above
+      // @todo Refine position by monitoring changes?
+      navigator.geolocation.getCurrentPosition( function( loc, fail ) {
+        that.handleLocation( loc, fail );
+      });
 
       return this;
     }

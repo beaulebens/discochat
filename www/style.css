@@ -1,0 +1,46 @@
+html {
+  height: 100%;
+}
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.disabled {
+  -webkit-filter: blur(3px);
+  -moz-filter: blur(3px);
+  -o-filter: blur(3px);
+  -ms-filter: blur(3px);
+  filter: blur(3px);
+}
+#mapchat {
+  width: 100%;
+  height: 100%;
+}
+#mc-map {
+  width: 100%;
+  height: 100%;
+}
+#mc-greet {
+  display: none;
+  padding: 1em;
+  width: 250px;
+  height: 150px;
+  position: absolute;
+  top: 100px;
+  left: 100px;
+  background: #eee;
+  z-index: 10; /* make sure it's above the overlay */
+}
+#mc-chat {
+  box-shadow: 3px 3px 3px #ddd;
+  background: #fff;
+  width: 400px; /* @todo should be max-width, once there's something in there to give it shape */
+  float: right;
+  position: absolute;
+  top: 2%;
+  bottom: 2%;
+  right: 1%;
+  border: solid 1px #ccc;
+  z-index: 10; /* make sure it's above the overlay */
+}

@@ -2,48 +2,7 @@
 <html>
 <head>
 	<title>MapChat</title>
-	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALYRkmz9NQ_FkosV3uRHgLiZZY5KCsYqQ&sensor=true"></script>
-	<script src="//code.jquery.com/jquery-latest.min.js"></script>
-	<script src="/lib/daynightoverlay.min.js"></script>
-	<script src="/lib/node/backbone/node_modules/underscore/underscore-min.js"></script>
-	<script src="/lib/node/backbone/backbone-min.js"></script>
-	<script src="/main.js"></script>
-	<script src="/socket.io/socket.io.js"></script>
-	<style>
-		html {
-			height: 100%;
-		}
-		body {
-			height: 100%;
-			margin: 0;
-			padding: 0;
-		}
-		.disabled {
-			-webkit-filter: blur(5px);
-			-moz-filter: blur(5px);
-			-o-filter: blur(5px);
-			-ms-filter: blur(5px);
-		}
-		#mapchat {
-			width: 100%;
-			height: 100%;
-		}
-		#mc-greet {
-			display: none;
-			padding: 1em;
-			width: 250px;
-			height: 150px;
-			position: absolute;
-			top: 100px;
-			left: 100px;
-			background: #eee;
-			z-index: 10; /* make sure it's above the overlay */
-		}
-		#mc-map {
-			width: 100%;
-			height: 100%;
-		}
-	</style>
+	<link rel="stylesheet" href="/style.css" type="text/css">
 </head>
 
 <body>
@@ -63,8 +22,15 @@
 		<h1>{{ data.name }}</h1>
 		<div>{{ data.localTime }}</div>
 	</script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALYRkmz9NQ_FkosV3uRHgLiZZY5KCsYqQ&sensor=true"></script>
+	<script src="//code.jquery.com/jquery-latest.min.js"></script>
+	<script src="/lib/daynightoverlay.min.js"></script>
+	<script src="/lib/node/backbone/node_modules/underscore/underscore-min.js"></script>
+	<script src="/lib/node/backbone/backbone-min.js"></script>
+	<script src="/main.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
 	<script type="text/javascript" charset="utf-8">
-	var MC;
+		var MC; // @todo Don't define this out here for production
 		jQuery(function($){
 			MC = new MapChat.App({ io: io.connect() });
 			MC.start();
