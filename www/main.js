@@ -294,3 +294,5 @@ MapChat.PersonMarkerView = ( function( $, Backbone ) {
 // ChatMessageView -- individual chat messages
 
 // ChatStreamView -- the entire chat stream, made up of a series of ChatMessageViews
+// @todo listenTo backbone and focus the chat when app is enabled
+// @todo listenTo people collection and post a message when someone is added to it (joins) or departs

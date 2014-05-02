@@ -8,7 +8,7 @@
 
 \******************************************************************************/
 var expio = require( 'express.io' ),
-		app= expio();
+		app   = expio();
 app.http().io();
 app.use( expio.static( __dirname + '/www' ) );
 app.use( expio.cookieParser() );
@@ -31,8 +31,8 @@ app.all( '*', function( req, res ) {
 app.io.route( 'ready', function( req ) {
 	console.log( 'Connected to: ' + req.data );
 
-	// @todo Load current members from DB and send them back to the connecting user
-	// @todo Send back previous 'x' chat messages (after users)
+	// @todo Load current members from Mongo and send them back to the connecting user
+	// @todo Load and send back previous 'x' chat messages (after users)
 
 	req.io.join( req.data );
 });
@@ -41,8 +41,7 @@ app.io.route( 'ready', function( req ) {
 // Set up their user details, broadcast them to the room
 app.io.route( 'join', function( req ) {
 	var user = req.data.user;
-console.log( 'Received user+' );
-console.log( req.data.user );
+
 	// Try to populate my info if it's not available already
 	var profile  = true;
 	if ( !user.filled ) {

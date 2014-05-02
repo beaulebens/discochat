@@ -15,18 +15,29 @@
 			</form>
 		</div>
 		<div id="mc-map"></div>
-		<div id="mc-chat"></div>
+		<div id="mc-chat">
+			<div id="log"></div>
+			<div id="message-box">
+				<textarea id="message"></textarea>
+			</div>
+		</div>
 	</div>
 	<script type="html/template" charset="utf-8" id="mc-map-marker">
 		<img src="{{ data.picture }}?s=100" alt="{{ data.name }}" width="100" height="100" />
 		<h1>{{ data.name }}</h1>
 		<div>{{ data.localTime }}</div>
 	</script>
+	<script type="html/template" charset="utf-8" id="mc-chat-message">
+		<img src="{{ data.picture }}?s=100" alt="{{ data.name }}" width="50" height="50" />
+		<div>{{ data.message }}</div>
+		<div>{{ data.time }}</div>
+	</script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALYRkmz9NQ_FkosV3uRHgLiZZY5KCsYqQ&sensor=true"></script>
 	<script src="//code.jquery.com/jquery-latest.min.js"></script>
 	<script src="/lib/daynightoverlay.min.js"></script>
 	<script src="/lib/node/backbone/node_modules/underscore/underscore-min.js"></script>
 	<script src="/lib/node/backbone/backbone-min.js"></script>
+	<script src="/lib/node/leaflet/dist/leaflet.js"></script>
 	<script src="/main.js"></script>
 	<script src="/socket.io/socket.io.js"></script>
 	<script type="text/javascript" charset="utf-8">
