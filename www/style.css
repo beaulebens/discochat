@@ -16,15 +16,15 @@ body {
   -ms-filter: blur(3px);
   filter: blur(3px);
 }
-#mapchat {
+#discochat {
   width: 100%;
   height: 100%;
 }
-#mc-map {
+#dc-map {
   width: 100%;
   height: 100%;
 }
-#mc-greet {
+#dc-greet {
   display: none;
   padding: 1em;
   width: 250px;
@@ -35,7 +35,7 @@ body {
   background: #eee;
   z-index: 10; /* make sure it's above the overlay */
 }
-#mc-chat {
+#dc-chat {
   box-shadow: 3px 3px 3px #ddd;
   background: #fff;
   width: 400px; /* @todo should be max-width, once there's something in there to give it shape */

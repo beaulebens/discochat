@@ -1,9 +1,9 @@
-var MapChat = MapChat || {};
+var DiscoChat = DiscoChat || {};
 
 // Core
 
 // Each user ("me" or otherwise)
-MapChat.Person = ( function( $, Backbone ) {
+DiscoChat.Person = ( function( $, Backbone ) {
   return Backbone.Model.extend({
     defaults: function() {
       return {
@@ -19,27 +19,27 @@ MapChat.Person = ( function( $, Backbone ) {
 })( jQuery, Backbone );
 
 // All people on this URL
-MapChat.People = ( function( $, Backbone ) {
+DiscoChat.People = ( function( $, Backbone ) {
   return Backbone.Collection.extend({
-    model: MapChat.Person
+    model: DiscoChat.Person
   });
 })( jQuery, Backbone );
 
 // Core application logic
-MapChat.App = ( function( $, Backbone, _ ) {
+DiscoChat.App = ( function( $, Backbone, _ ) {
   return Backbone.Router.extend({
     initialize: function( options ) {
       console.log( 'App:initialize' );
       this.io     = options.io; // required
-      this.me     = options.me     || new MapChat.Person();
-      this.people = options.people || new MapChat.People( [ this.me ] );
+      this.me     = options.me     || new DiscoChat.Person();
+      this.people = options.people || new DiscoChat.People( [ this.me ] );
       this.room   = this.getRoom();
-      this.map    = new MapChat.MapView({
+      this.map    = new DiscoChat.MapView({
         me:     this.me,
         people: this.people,
-        el:     '#mc-map'
+        el:     '#dc-map'
       });
-      window.history.pushState( '', 'MapChat', '/' + this.room );
+      window.history.pushState( '', 'DiscoChat', '/' + this.room );
 
       // Connect to room and render everyone
       this.io.emit( 'ready', this.room );
@@ -110,16 +110,16 @@ MapChat.App = ( function( $, Backbone, _ ) {
       // If we don't know who this is yet, let's ask
       if ( ! this.me.get( 'email' ).length ) {
         Backbone.trigger( 'disable-app' );
-        new MapChat.GreetView( { el: $( '#mc-greet' ), me: this.me } ).render();
+        new DiscoChat.GreetView( { el: $( '#dc-greet' ), me: this.me } ).render();
       }
     }
   });
 })( jQuery, Backbone, _ );
 
 // Main map view
-MapChat.MapView = ( function( $, Backbone, _ ) {
+DiscoChat.MapView = ( function( $, Backbone, _ ) {
   return Backbone.View.extend({
-    id: 'mc-map',
+    id: 'dc-map',
 
     initialize: function( options ) {
       console.log( 'MapView:initialize' );
@@ -209,8 +209,8 @@ MapChat.MapView = ( function( $, Backbone, _ ) {
       console.log( 'MapView:drawOverlay' );
       map = map || this.map;
       // @todo This reduces the flash of "white", but we still get a pulsing effect during redraw
-      $( '#mc-overlay' ).fadeOut( 'fast', function() { this.remove(); } );
-      this.overlay = new DayNightOverlay( { map: map, id: 'mc-overlay' } );
+      $( '#dc-overlay' ).fadeOut( 'fast', function() { this.remove(); } );
+      this.overlay = new DayNightOverlay( { map: map, id: 'dc-overlay' } );
     },
 
     render: function() {
@@ -243,7 +243,7 @@ MapChat.MapView = ( function( $, Backbone, _ ) {
   });
 })( jQuery, Backbone, _ );
 
-MapChat.GreetView = ( function( $, Backbone, _ ) {
+DiscoChat.GreetView = ( function( $, Backbone, _ ) {
   return Backbone.View.extend({
     initialize: function( options ) {
       console.log( 'GreetView:initialize' );
@@ -280,7 +280,7 @@ MapChat.GreetView = ( function( $, Backbone, _ ) {
 // Map
 
 // PersonMarkerView -- the pins on the map
-MapChat.PersonMarkerView = ( function( $, Backbone ) {
+DiscoChat.PersonMarkerView = ( function( $, Backbone ) {
   return Backbone.View.extend({
 
   });

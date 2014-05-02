@@ -1,7 +1,7 @@
 {
-  "name": "MapChat",
+  "name": "DiscoChat",
   "version": "0.0.1",
-  "description": "Share a URL and get your friends on a map, with their local times.",
+  "description": "DiscoChat helps distributed groups collaborate, making it easy to exchange media and keep in touch, while keeping track of the bane of everyone's existence: timezones/local time.",
   "main": "app.js",
   "keywords": [
     "geo",

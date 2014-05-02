@@ -2,7 +2,7 @@
 
 
 
-                                   MAPCHAT
+                                  DiscoChat
 
 
 
@@ -50,7 +50,7 @@ app.io.route( 'join', function( req ) {
 			opts = {
 				url: url,
 				headers: {
-					'User-Agent': 'MapChat/0.0.1' // User agent is required for Gravatar profiles requests
+					'User-Agent': 'DiscoChat/0.0.1' // User agent is required for Gravatar profiles requests
 				}
 			};
 		request( opts, function( err, res, body ) {
@@ -95,7 +95,7 @@ app.io.route( 'say', function( req ) {
 	if ( '/' === req.data.message.subString( 0, 1 ) ) {
 		// @todo Handle commands
 		// var command = req.data.message.subString( 1 ).split( ' ' )[0],
-		// 		commandHandler = new MapChat.CommandHandler( command, req );
+		// 		commandHandler = new DiscoChat.CommandHandler( command, req );
 		// CommandHandler.dispatch();
 	} else {
 		app.io.room( req.data.room ).broadcast( 'say', { message: req.data.message, user: req.data.user } );
@@ -111,4 +111,4 @@ app.io.route( 'disconnect', function( req ) {
 
 // Let's do this
 app.listen( port );
-console.log( 'MapChat accepting clients on http://localhost:' + port + '/' );
+console.log( 'DiscoChat accepting clients on http://localhost:' + port + '/' );
