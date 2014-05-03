@@ -54,7 +54,7 @@ body {
   padding: 20px;
   overflow-y: scroll;
   height: 100%;
-  margin-bottom: 61px;
+  padding-bottom: 61px;
 }
 #log .avatar {
   border-radius: 50%;

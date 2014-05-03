@@ -363,9 +363,12 @@ DiscoChat.MessageView = ( function( $, Backbone, _, moment ) {
         this.$el.addClass( 'me' );
       }
 
+      var message = this.model.toJSON();
+      message.utc = new moment( message.utc ).format( 'h:mm a' );
+
       this.$el.html( _.template(
         $( '#dc-chat-message' ).html(),
-        this.model.toJSON(),
+        message,
         { variable: 'data' }
       ) );
       return this;
@@ -401,13 +404,13 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
     },
 
     scrollToBottom: function() {
-      this.$el.animate( {
-        scrollTop: this.$el.height()
-      }, 500 );
+      this.$( '#log' ).animate( {
+        scrollTop: $( '#log' )[0].scrollHeight
+      }, 1000 );
     },
 
     maybePostMessage: function( e ) {
-      if ( 13 === e.keyCode ) {
+      if ( 13 === e.keyCode && '' !== this.$( '#message' ).val().trim() ) {
         e.preventDefault();
         this.postMessage();
       }
@@ -426,13 +429,21 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       this.io.emit( 'say', message );
     },
 
-    renderMessage: function( message ) {
+    renderMessage: function( message, options ) {
       console.log( 'ChatStreamView:renderMessage' );
+
+      // @todo Check this against the last one, and if they're by the same person,
+      // then render this one into the end of the other, rather than doing a whole new thing.
+
       var messageView = new DiscoChat.MessageView( {
         model: message,
         me:    this.me
       });
       this.$( '#log' ).append( messageView.render().$el );
+
+      if ( 'undefined' == typeof options.scroll || true === options.scroll ) {
+        this.scrollToBottom();
+      }
     },
 
     render: function( options ) {
@@ -440,9 +451,6 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       _.each( this.collection, function( message ) {
         this.renderMessage( message );
       });
-
-      // Add the chat box to the end of the list
-
 
       // Scroll to the bottom
       this.scrollToBottom();

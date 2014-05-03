@@ -29,7 +29,9 @@
 	</script>
 	<script type="html/template" charset="utf-8" id="dc-chat-message">
 		<img src="<%= data.user.picture %>?s=100" title="<%= data.user.name %>" width="50" height="50" class="avatar" />
-		<div class="message"><%= data.message %></div>
+		<div class="message">
+			<%= data.message %>
+		</div>
 		<div class="tail">
 			<span class="top"></span>
 			<span class="bot"></span>
