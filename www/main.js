@@ -18,7 +18,7 @@ DiscoChat.Person = ( function( $, Backbone ) {
   });
 })( jQuery, Backbone );
 
-// All people on this URL
+// All people in this room
 DiscoChat.People = ( function( $, Backbone ) {
   return Backbone.Collection.extend({
     model: DiscoChat.Person
@@ -30,14 +30,23 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
   return Backbone.Router.extend({
     initialize: function( options ) {
       console.log( 'App:initialize' );
-      this.io     = options.io; // required
-      this.me     = options.me     || new DiscoChat.Person();
-      this.people = options.people || new DiscoChat.People( [ this.me ] );
-      this.room   = this.getRoom();
-      this.map    = new DiscoChat.MapView({
+      this.io       = options.io; // required
+      this.me       = options.me     || new DiscoChat.Person();
+      this.people   = options.people || new DiscoChat.People( [ this.me ] );
+      this.messages = options.messages || new DiscoChat.Messages();
+      this.room     = this.getRoom();
+      this.map = new DiscoChat.MapView({
         me:     this.me,
         people: this.people,
         el:     '#dc-map'
+      });
+      this.chat = new DiscoChat.ChatStreamView({
+        el:       '#dc-chat',
+        io:       this.io,
+        me:       this.me,
+        room:     this.room,
+        messages: this.messages,
+        people:   this.people
       });
       window.history.pushState( '', 'DiscoChat', '/' + this.room );
 
@@ -52,6 +61,10 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
       this.io.on( 'user', function( data ) {
         that.addPerson( data );
       });
+
+      this.io.on( 'message', function( data ) {
+        that.addMessage( data );
+      });
     },
 
     addPerson: function( person ) {
@@ -64,6 +77,11 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
         console.log( ' - Add new ' + person.email );
         this.people.add( person, { merge: true } );
       }
+    },
+
+    addMessage: function( message ) {
+      console.log( 'App:addMessage' );
+      this.messages.add( message );
     },
 
     getRoom: function( options ) {
@@ -280,19 +298,159 @@ DiscoChat.GreetView = ( function( $, Backbone, _ ) {
 // Map
 
 // PersonMarkerView -- the pins on the map
-DiscoChat.PersonMarkerView = ( function( $, Backbone ) {
+DiscoChat.PersonMarkerView = ( function( $, Backbone, _, moment ) {
   return Backbone.View.extend({
+    model: DiscoChat.Person,
 
+    render: function( options ) {
+      return this;
+    }
   });
-})( jQuery, Backbone );
+})( jQuery, Backbone, _, moment );
 
 
 // Chat
 
 // PersonChatView -- what a user looks like in chats
 
-// ChatMessageView -- individual chat messages
+// Message -- the model for a single chat message
+DiscoChat.Message = ( function( $, Backbone, _, moment ) {
+  return Backbone.Model.extend({
+    defaults: function() {
+      return {
+        utc: new moment(),
+        who: null, // null indicates a "system" message
+        message: ''
+      };
+    },
+
+    initialize: function( options ) {
+
+    },
+
+    render: function( options ) {
+      return this;
+    }
+  });
+})( jQuery, Backbone, _, moment );
+
+// Messages -- Collection of Message models
+DiscoChat.Messages = ( function( $, Backbone ) {
+  return Backbone.Collection.extend({
+    model: DiscoChat.Message,
+
+    comparator: function( a, b ) {
+      return a.get( 'utc' ) > b.get( 'utc' );
+    }
+  });
+})( jQuery, Backbone );
+
+// MessageView -- individual chat messages
+DiscoChat.MessageView = ( function( $, Backbone, _, moment ) {
+  return Backbone.View.extend({
+    model: DiscoChat.Message,
+
+    className: 'dc-message',
+
+    initialize: function( options ) {
+      console.log( 'MessageView:initialize' );
+      this.me = options.me;
+    },
+
+    render: function( options ) {
+      // Add a class for my own messages so they can be styled differently
+      if ( this.me.get( 'email' ) === this.model.get( 'user' ).email ) {
+        this.$el.addClass( 'me' );
+      }
+
+      this.$el.html( _.template(
+        $( '#dc-chat-message' ).html(),
+        this.model.toJSON(),
+        { variable: 'data' }
+      ) );
+      return this;
+    }
+  });
+})( jQuery, Backbone, _, moment );
+
 
 // ChatStreamView -- the entire chat stream, made up of a series of ChatMessageViews
 // @todo listenTo backbone and focus the chat when app is enabled
 // @todo listenTo people collection and post a message when someone is added to it (joins) or departs
+DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
+  return Backbone.View.extend({
+    collection: DiscoChat.Messages,
+
+    initialize: function( options ) {
+      console.log( 'ChatStreamView:initialize' );
+      this.io         = options.io;
+      this.me         = options.me;
+      this.room       = options.room;
+      this.collection = options.messages;
+
+      this.listenTo( Backbone,        'enable-app', this.focusChat     );
+      this.listenTo( this.collection, 'add',        this.renderMessage );
+    },
+
+    events: {
+      'keydown': 'maybePostMessage'
+    },
+
+    focusChat: function( e ) {
+      this.$( '#message' ).focus();
+    },
+
+    scrollToBottom: function() {
+      this.$el.animate( {
+        scrollTop: this.$el.height()
+      }, 500 );
+    },
+
+    maybePostMessage: function( e ) {
+      if ( 13 === e.keyCode ) {
+        e.preventDefault();
+        this.postMessage();
+      }
+    },
+
+    postMessage: function( e ) {
+      console.log( 'ChatStreamView:postMessage' );
+      var message = this.$( '#message' ).val();
+      this.$( '#message' ).val( '' );
+
+      message = new DiscoChat.Message( {
+        message: message,
+        who:     this.me
+      });
+
+      this.io.emit( 'say', message );
+    },
+
+    renderMessage: function( message ) {
+      console.log( 'ChatStreamView:renderMessage' );
+      var messageView = new DiscoChat.MessageView( {
+        model: message,
+        me:    this.me
+      });
+      this.$( '#log' ).append( messageView.render().$el );
+    },
+
+    render: function( options ) {
+      // Render any messages we have
+      _.each( this.collection, function( message ) {
+        this.renderMessage( message );
+      });
+
+      // Add the chat box to the end of the list
+
+
+      // Scroll to the bottom
+      this.scrollToBottom();
+
+      // Focus the chat box
+      this.focusChat();
+
+      return this;
+    }
+  });
+})( jQuery, Backbone, _ );

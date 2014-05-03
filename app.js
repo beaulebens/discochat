@@ -24,7 +24,7 @@ var port = process.env.PORT || 8888;
 
 // For all requests, send back our index
 app.all( '*', function( req, res ) {
-	res.sendfile(__dirname + '/index.html');
+	res.sendfile(__dirname + '/www/index.html');
 });
 
 // Ready event sent when we know which room we want to connect to
@@ -92,13 +92,13 @@ app.io.route( 'join', function( req ) {
 
 // Receive a message from a user and broadcast it back out to everyone in the room
 app.io.route( 'say', function( req ) {
-	if ( '/' === req.data.message.subString( 0, 1 ) ) {
+	if ( '/' === req.data.message.substr( 0, 1 ) ) {
 		// @todo Handle commands
-		// var command = req.data.message.subString( 1 ).split( ' ' )[0],
+		// var command = req.data.message.substr( 1 ).split( ' ' )[0],
 		// 		commandHandler = new DiscoChat.CommandHandler( command, req );
 		// CommandHandler.dispatch();
 	} else {
-		app.io.room( req.data.room ).broadcast( 'say', { message: req.data.message, user: req.data.user } );
+		app.io.room( req.data.room ).broadcast( 'message', { message: req.data.message, user: req.data.who } );
 	}
 });
 

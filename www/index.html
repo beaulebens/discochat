@@ -2,20 +2,20 @@
 <html>
 <head>
 	<title>DiscoChat</title>
+	<link rel="stylesheet" href="/node/normalize.css/normalize.css" type="text/css">
 	<link rel="stylesheet" href="/style.css" type="text/css">
 </head>
 
 <body>
 	<div id="discochat">
-		<div id="dc-greet">
-			<h2>Who are you?</h2>
+		<div id="dc-greet" class="panel">
 			<form id="email-form">
 				<input type="text" id="email" placeholder="Email address...">
 				<input type="submit" id="submit" value="Go">
 			</form>
 		</div>
 		<div id="dc-map"></div>
-		<div id="dc-chat">
+		<div id="dc-chat" class="panel">
 			<div id="log"></div>
 			<div id="message-box">
 				<textarea id="message"></textarea>
@@ -28,9 +28,14 @@
 		<div>{{ data.localTime }}</div>
 	</script>
 	<script type="html/template" charset="utf-8" id="dc-chat-message">
-		<img src="{{ data.picture }}?s=100" alt="{{ data.name }}" width="50" height="50" />
-		<div>{{ data.message }}</div>
-		<div>{{ data.time }}</div>
+		<img src="<%= data.user.picture %>?s=100" title="<%= data.user.name %>" width="50" height="50" class="avatar" />
+		<div class="message"><%= data.message %></div>
+		<div class="tail">
+			<span class="top"></span>
+			<span class="bot"></span>
+		</div>
+		<div class="utc"><%= data.utc %></div>
+		<div class="name"><%= data.user.name %></div>
 	</script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALYRkmz9NQ_FkosV3uRHgLiZZY5KCsYqQ&sensor=true"></script>
 	<script src="//code.jquery.com/jquery-latest.min.js"></script>
@@ -38,6 +43,7 @@
 	<script src="/lib/node/backbone/node_modules/underscore/underscore-min.js"></script>
 	<script src="/lib/node/backbone/backbone-min.js"></script>
 	<script src="/lib/node/leaflet/dist/leaflet.js"></script>
+	<script src="/lib/node/moment/min/moment.min.js"></script>
 	<script src="/main.js"></script>
 	<script src="/socket.io/socket.io.js"></script>
 	<script type="text/javascript" charset="utf-8">
