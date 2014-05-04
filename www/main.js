@@ -364,13 +364,18 @@ DiscoChat.MessageView = ( function( $, Backbone, _, moment ) {
       }
 
       var message = this.model.toJSON();
-      message.utc = new moment( message.utc ).format( 'h:mm a' );
 
       this.$el.html( _.template(
         $( '#dc-chat-message' ).html(),
         message,
         { variable: 'data' }
       ) );
+
+      var that = this;
+      this.$( '.moment' ).each( function( index ) {
+        $( this ).html( moment( $( this ).data( 'moment' ) ).fromNow() );
+      });
+
       return this;
     }
   });
@@ -393,6 +398,13 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
 
       this.listenTo( Backbone,        'enable-app', this.focusChat     );
       this.listenTo( this.collection, 'add',        this.renderMessage );
+
+      var that = this;
+      setInterval( function() {
+        that.$( '.moment' ).each( function( index ) {
+          $( this ).html( moment( $( this ).data( 'moment' ) ).fromNow() );
+        });
+      }, 1000 );
     },
 
     events: {

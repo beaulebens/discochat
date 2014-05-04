@@ -77,20 +77,20 @@ body {
 .dc-message {
   margin: 0 0 30px 0;
 }
-.dc-message.me .tail {
-  float: left;
-  margin-left: 5px;
-  background: #eee;
-  color: #888;
-}
 .dc-message .tail {
   float: right;
   background: #888;
   color: #fff;
   width: 10px;
   height: 20px;
-  margin-top: -30px;
   margin-right: 5px;
+  margin-top: 10px;
+}
+.dc-message.me .tail {
+  float: left;
+  margin-left: 5px;
+  background: #eee;
+  color: #888;
 }
 .dc-message .tail span {
   display: block;
@@ -98,28 +98,23 @@ body {
   height: 10px;
   background: #fff;
 }
-.dc-message.me .tail .top {
-  border-radius: 0 0 10px 0;
-}
-.dc-message.me .tail .bot {
-  border-radius: 0 10px 0 0;
-}
 .dc-message .tail .top {
   border-radius: 0 0 0 10px;
 }
 .dc-message .tail .bot {
   border-radius: 10px 0 0 0;
 }
-.dc-message.me .avatar {
-  float: left;
+.dc-message.me .tail .top {
+  border-radius: 0 0 10px 0;
+}
+.dc-message.me .tail .bot {
+  border-radius: 0 10px 0 0;
 }
 .dc-message .avatar {
   float: right;
 }
-.dc-message.me .message {
-  margin: 0 0 0 65px;
-  background: #eee;
-  color: #888;
+.dc-message.me .avatar {
+  float: left;
 }
 .dc-message .message {
   background: #888;
@@ -128,20 +123,27 @@ body {
   padding: 10px;
   margin: 0 65px 0 0;
 }
-.dc-message.me .utc {
-  margin: 0 10px 0 0;
+.dc-message.me .message {
+  margin: 0 0 0 65px;
+  background: #eee;
+  color: #888;
 }
 .dc-message .utc {
   float: right;
   opacity: .6;
   font-size: 10px;
-  margin: 0 25px 0 0;
+  margin: 0;
+  position: absolute;
+  right: 95px;
 }
-.dc-message.me .name {
-  margin: 0 0 0 75px;
+.dc-message.me .utc {
+  right: 30px;
 }
 .dc-message .name {
   opacity: .6;
   font-size: 10px;
   margin: 0 0 0 10px;
+}
+.dc-message.me .name {
+  margin: 0 0 0 75px;
 }
