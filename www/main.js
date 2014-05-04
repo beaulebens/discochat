@@ -115,8 +115,7 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
       if ( this.me.get( 'email' ).length ) {
         console.log( ' - sending ' + this.me.get( 'email' ) );
         this.io.emit( 'join', {
-          user: this.me.toJSON(),
-          room: this.room
+          user: this.me.toJSON()
         });
       }
     },
@@ -396,19 +395,36 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       this.room       = options.room;
       this.collection = options.messages;
 
-      this.listenTo( Backbone,        'enable-app', this.focusChat     );
-      this.listenTo( this.collection, 'add',        this.renderMessage );
+      this.listenTo( Backbone,        'enable-app',  this.focusChat     );
+      this.listenTo( Backbone,        'enable-app',  this.enableApp     );
+      this.listenTo( Backbone,        'disable-app', this.disableApp    );
+      this.listenTo( this.collection, 'add',         this.renderMessage );
+
+      // When someone disconnects
+      this.io.on( 'part', function( data ) {
+        console.log( data.name + ' has left this room.' );
+      });
 
       var that = this;
       setInterval( function() {
         that.$( '.moment' ).each( function( index ) {
           $( this ).html( moment( $( this ).data( 'moment' ) ).fromNow() );
         });
-      }, 1000 );
+      }, 15000 );
     },
 
     events: {
       'keydown': 'maybePostMessage'
+    },
+
+    disableApp: function() {
+      console.log( 'ChatStreamView:disableApp' );
+      this.$el.addClass( 'disabled' );
+    },
+
+    enableApp: function() {
+      console.log( 'ChatStreamView:enableApp' );
+      this.$el.removeClass( 'disabled' );
     },
 
     focusChat: function( e ) {
@@ -418,7 +434,7 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
     scrollToBottom: function() {
       this.$( '#log' ).animate( {
         scrollTop: $( '#log' )[0].scrollHeight
-      }, 1000 );
+      }, 500 );
     },
 
     maybePostMessage: function( e ) {
@@ -432,12 +448,7 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       console.log( 'ChatStreamView:postMessage' );
       var message = this.$( '#message' ).val();
       this.$( '#message' ).val( '' );
-
-      message = new DiscoChat.Message( {
-        message: message,
-        who:     this.me
-      });
-
+      message = new DiscoChat.Message( { message: message } );
       this.io.emit( 'say', message );
     },
 

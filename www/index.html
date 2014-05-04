@@ -29,15 +29,17 @@
 	</script>
 	<script type="html/template" charset="utf-8" id="dc-chat-message">
 		<img src="<%= data.user.picture %>?s=100" title="<%= data.user.name %>" width="50" height="50" class="avatar" />
-		<div class="tail">
-			<span class="top"></span>
-			<span class="bot"></span>
+		<div class="message-container">
+			<div class="tail">
+				<span class="top"></span>
+				<span class="bot"></span>
+			</div>
+			<div class="message">
+				<%= data.message %>
+			</div>
+			<div class="utc moment" data-moment="<%= data.utc %>"></div>
+			<div class="name"><%= data.user.name %></div>
 		</div>
-		<div class="message">
-			<%= data.message %>
-		</div>
-		<div class="utc moment" data-moment="<%= data.utc %>"></div>
-		<div class="name"><%= data.user.name %></div>
 	</script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALYRkmz9NQ_FkosV3uRHgLiZZY5KCsYqQ&sensor=true"></script>
 	<script src="//code.jquery.com/jquery-latest.min.js"></script>
