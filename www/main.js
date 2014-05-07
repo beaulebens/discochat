@@ -345,11 +345,13 @@ DiscoChat.Messages = ( function( $, Backbone ) {
 })( jQuery, Backbone );
 
 // MessageView -- individual chat messages
-DiscoChat.MessageView = ( function( $, Backbone, _, moment ) {
+DiscoChat.MessageView = ( function( $, Backbone, _, moment, Handlebars ) {
   return Backbone.View.extend({
     model: DiscoChat.Message,
 
     className: 'dc-message',
+
+    template: Handlebars.compile,
 
     initialize: function( options ) {
       console.log( 'MessageView:initialize' );
@@ -362,13 +364,10 @@ DiscoChat.MessageView = ( function( $, Backbone, _, moment ) {
         this.$el.addClass( 'me' );
       }
 
-      var message = this.model.toJSON();
+      var message = this.model.toJSON(),
+          template = this.template( $( '#dc-chat-message' ).html() );
 
-      this.$el.html( _.template(
-        $( '#dc-chat-message' ).html(),
-        message,
-        { variable: 'data' }
-      ) );
+      this.$el.html( template( { data: message } ) );
 
       var that = this;
       this.$( '.moment' ).each( function( index ) {
@@ -378,7 +377,7 @@ DiscoChat.MessageView = ( function( $, Backbone, _, moment ) {
       return this;
     }
   });
-})( jQuery, Backbone, _, moment );
+})( jQuery, Backbone, _, moment, Handlebars );
 
 
 // ChatStreamView -- the entire chat stream, made up of a series of ChatMessageViews
