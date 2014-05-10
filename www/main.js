@@ -36,9 +36,9 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
       this.messages = options.messages || new DiscoChat.Messages();
       this.room     = this.getRoom();
       this.map = new DiscoChat.MapView({
+        el:     '#dc-map',
         me:     this.me,
         people: this.people,
-        el:     '#dc-map'
       });
       this.chat = new DiscoChat.ChatStreamView({
         el:       '#dc-chat',
@@ -69,13 +69,13 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
 
     addPerson: function( person ) {
       console.log( 'App:addPerson' );
-      var found = this.people.findWhere( { email: person.email } );
+      var found = this.people.findWhere({ email: person.email });
       if ( found ) {
         console.log( ' - Found ' + found.get( 'email' ) );
         found.set( person );
       } else {
         console.log( ' - Add new ' + person.email );
-        this.people.add( person, { merge: true } );
+        this.people.add( person, { merge: true });
       }
     },
 
@@ -88,7 +88,7 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
       console.log( 'App:getRoom' );
       // Check for room id in URL
       // URL parsing-technique from http://tutorialzine.com/2013/07/quick-tip-parse-urls/
-      var url  = $( '<a>', { href: document.location.href } )[0];
+      var url  = $( '<a>', { href: document.location.href })[0];
       var path = url.pathname.split( '/' );
       path.shift(); // Get rid of the first one, which is always empty
 
@@ -105,7 +105,9 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
     // @source: http://stackoverflow.com/questions/1349404/generate-a-string-of-5-random-characters-in-javascript
     randomStr: function( m ) {
       var s = '', r = '1234567890abcdef'; // generate md5-ish strings
-      for ( var i = 0; i < m; i++ ) { s += r.charAt( Math.floor( Math.random() * r.length ) ); }
+      for ( var i = 0; i < m; i++ ) {
+        s += r.charAt( Math.floor( Math.random() * r.length ) );
+      }
       return s;
     },
 
@@ -127,7 +129,7 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
       // If we don't know who this is yet, let's ask
       if ( ! this.me.get( 'email' ).length ) {
         Backbone.trigger( 'disable-app' );
-        new DiscoChat.GreetView( { el: $( '#dc-greet' ), me: this.me } ).render();
+        new DiscoChat.GreetView({ el: $( '#dc-greet' ), me: this.me }).render();
       }
     }
   });
@@ -181,7 +183,7 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
           position: point,
           map: that.map,
           title: person.get( 'name' )
-        } );
+        });
 
         // Create window to attach to marker
         // var infoWin = new google.maps.InfoWindow({
@@ -189,7 +191,7 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
         //   position: point,
         //   pixelOffset: new google.maps.Size( 0, 0 ),
         //   maxWidth : 300
-        // } );
+        // });
 
         // Extend the bounds of our map to include this point
         bounds.extend( point );
@@ -203,7 +205,7 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
 
     updateMyLocation: function( lat, long ) {
       console.log( 'MapView:updateMyLocation' );
-      this.me.set( { location: [ lat, long ] } );
+      this.me.set({ location: [ lat, long ] });
       this.redrawMap();
     },
 
@@ -226,8 +228,8 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
       console.log( 'MapView:drawOverlay' );
       map = map || this.map;
       // @todo This reduces the flash of "white", but we still get a pulsing effect during redraw
-      $( '#dc-overlay' ).fadeOut( 'fast', function() { this.remove(); } );
-      this.overlay = new DayNightOverlay( { map: map, id: 'dc-overlay' } );
+      $( '#dc-overlay' ).fadeOut( 'fast', function() { this.remove(); });
+      this.overlay = new DayNightOverlay({ map: map, id: 'dc-overlay' });
     },
 
     render: function() {
@@ -277,7 +279,7 @@ DiscoChat.GreetView = ( function( $, Backbone, _ ) {
 
       // Get email and clear the form
       var $email = this.$( '#email' );
-      this.me.set( { email: $email.val() } );
+      this.me.set({ email: $email.val() });
       $email.val( '' );
 
       this.remove();
@@ -318,17 +320,9 @@ DiscoChat.Message = ( function( $, Backbone, _, moment ) {
     defaults: function() {
       return {
         utc: new moment(),
-        who: null, // null indicates a "system" message
+        user: null, // null indicates a "system" message
         message: ''
       };
-    },
-
-    initialize: function( options ) {
-
-    },
-
-    render: function( options ) {
-      return this;
     }
   });
 })( jQuery, Backbone, _, moment );
@@ -359,15 +353,21 @@ DiscoChat.MessageView = ( function( $, Backbone, _, moment, Handlebars ) {
     },
 
     render: function( options ) {
-      // Add a class for my own messages so they can be styled differently
-      if ( this.me.get( 'email' ) === this.model.get( 'user' ).email ) {
+      console.log( 'MessageView:render' );
+      var htmlTemplate = '#dc-chat-message';
+      if ( this.model.get( 'user' ) === null ) {
+        // System message
+        htmlTemplate = '#dc-system-message';
+        this.$el.addClass( 'system' );
+      } else if ( this.me.get( 'email' ) === this.model.get( 'user' ).email ) {
+        // Add a class if this was my own message
         this.$el.addClass( 'me' );
       }
 
       var message = this.model.toJSON(),
-          template = this.template( $( '#dc-chat-message' ).html() );
+          template = this.template( $( htmlTemplate ).html() );
 
-      this.$el.html( template( { data: message } ) );
+      this.$el.html( template({ data: message }) );
 
       var that = this;
       this.$( '.moment' ).each( function( index ) {
@@ -391,20 +391,21 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       console.log( 'ChatStreamView:initialize' );
       this.io         = options.io;
       this.me         = options.me;
+      this.people     = options.people;
       this.room       = options.room;
       this.collection = options.messages;
 
-      this.listenTo( Backbone,        'enable-app',  this.focusChat     );
-      this.listenTo( Backbone,        'enable-app',  this.enableApp     );
-      this.listenTo( Backbone,        'disable-app', this.disableApp    );
-      this.listenTo( this.collection, 'add',         this.renderMessage );
-
-      // When someone disconnects
-      this.io.on( 'part', function( data ) {
-        console.log( data.name + ' has left this room.' );
-      });
+      this.listenTo( Backbone,        'enable-app',  this.focusChat        );
+      this.listenTo( Backbone,        'enable-app',  this.enableApp        );
+      this.listenTo( Backbone,        'disable-app', this.disableApp       );
+      this.listenTo( this.collection, 'add',         this.renderMessage    );
+      this.listenTo( this.people,     'add',         this.joinMessage      );
 
       var that = this;
+      this.io.on( 'part', function( data ) {
+        that.partMessage( data );
+      });
+
       setInterval( function() {
         that.$( '.moment' ).each( function( index ) {
           $( this ).html( moment( $( this ).data( 'moment' ) ).fromNow() );
@@ -431,9 +432,39 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
     },
 
     scrollToBottom: function() {
-      this.$( '#log' ).animate( {
+      this.$( '#log' ).animate({
         scrollTop: $( '#log' )[0].scrollHeight
       }, 500 );
+    },
+
+    joinMessage: function( person ) {
+      var name = person.get( 'name' );
+      if ( !name.length )
+        name = 'Someone';
+      var message = new DiscoChat.Message({
+            message: name + ' joined the chat.' // @todo i18n
+          }),
+          messageView = new DiscoChat.MessageView({
+            model: message,
+            me: this.me
+          });
+      this.$( '#log' ).append( messageView.render().$el );
+      this.scrollToBottom();
+    },
+
+    partMessage: function( data ) {
+      var name = data.name;
+      if ( !name.length )
+        name = 'Someone';
+      var message = new DiscoChat.Message({
+            message: name + ' disconnected.' // @todo i18n
+          }),
+          messageView = new DiscoChat.MessageView({
+            model: message,
+            me: this.me
+          });
+      this.$( '#log' ).append( messageView.render().$el );
+      this.scrollToBottom();
     },
 
     maybePostMessage: function( e ) {
@@ -447,7 +478,7 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       console.log( 'ChatStreamView:postMessage' );
       var message = this.$( '#message' ).val();
       this.$( '#message' ).val( '' );
-      message = new DiscoChat.Message( { message: message } );
+      message = new DiscoChat.Message({ message: message });
       this.io.emit( 'say', message );
     },
 
@@ -457,7 +488,7 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       // @todo Check this against the last one, and if they're by the same person,
       // then render this one into the end of the other, rather than doing a whole new thing.
 
-      var messageView = new DiscoChat.MessageView( {
+      var messageView = new DiscoChat.MessageView({
         model: message,
         me:    this.me
       });
@@ -466,6 +497,8 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       if ( 'undefined' == typeof options.scroll || true === options.scroll ) {
         this.scrollToBottom();
       }
+
+      return this;
     },
 
     render: function( options ) {

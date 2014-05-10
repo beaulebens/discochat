@@ -19,6 +19,7 @@
     "moment": "2.6.0",
     "mongo": "0.1.0",
     "normalize.css": "^3.0.1",
+    "q": "^1.0.1",
     "request": "2.34.0",
     "requirejs": "^2.1.11",
     "timezoner": "0.1.7"

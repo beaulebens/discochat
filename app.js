@@ -12,14 +12,66 @@ var expio = require( 'express.io' ),
 app.http().io();
 app.use( expio.static( __dirname + '/www' ) );
 app.use( expio.cookieParser() );
-app.use( expio.session( { secret: 'dfvn23589e8fvihsk,j3rcmhrv^%hjvbdjhbv' } ) );
+app.use( expio.session({ secret: 'dfvn23589e8fvihsk,j3rcmhrv^%hjvbdjhbv' }) );
 
 var request  = require( 'request'    ),
 		crypto   = require( 'crypto/md5' ),
-		timezone = require( 'timezoner'  );
+		timezone = require( 'timezoner'  ),
+    Q        = require( 'q'          );
 
 // This is needed if the app is run on heroku
 var port = process.env.PORT || 8888;
+
+var populateUserDetails = function( user ) {
+  return Q.all([ getUserProfile( user ), getUserTimezone( user ) ]);
+};
+
+var getUserProfile = function( user ) {
+  var defer = Q.defer();
+
+  // Request their profile from Gravatar
+  var hash = crypto.hex_md5( user.email.trim().toLowerCase() ),
+      url = 'https://secure.gravatar.com/' + hash + '.json',
+      opts = {
+        url: url,
+        headers: {
+          'User-Agent': 'DiscoChat/0.0.1' // User agent is required for Gravatar profiles requests
+        }
+      };
+  request( opts, function( err, res, body ) {
+    profile = JSON.parse( body );
+    if ( profile && profile.entry ) {
+      var p = profile.entry[0];
+      user.name = ( p.displayName && p.displayName ) || user.email;
+      user.picture = 'https://secure.gravatar.com/avatar/' + hash;
+      defer.resolve();
+    } else {
+      defer.reject();
+    }
+  });
+
+  return defer.promise;
+};
+
+var getUserTimezone = function( user ) {
+  var defer = Q.defer();
+
+  // See if we can get their timezone from Google
+  timezone.getTimeZone(
+    user.location[0],
+    user.location[1],
+    function( err, data ) {
+      if ( !err && 'OK' === data.status ) {
+        user.offset = data.rawOffset / 60 / 60; // hours
+        defer.resolve();
+      } else {
+        defer.reject();
+      }
+    }
+  );
+
+  return defer.promise;
+};
 
 // For all requests, send back our index
 app.all( '*', function( req, res ) {
@@ -43,52 +95,17 @@ app.io.route( 'join', function( req ) {
 	var user = req.data.user;
   req.session.user = user;
 
-	// Try to populate my info if it's not available already
-	var profile  = true;
+	// Try to populate user info if it's not available already
 	if ( !user.filled ) {
-		// Request their profile from Gravatar
-		var hash = crypto.hex_md5( user.email.trim().toLowerCase() ),
-        url = 'https://secure.gravatar.com/' + hash + '.json',
-        opts = {
-          url: url,
-          headers: {
-            'User-Agent': 'DiscoChat/0.0.1' // User agent is required for Gravatar profiles requests
-          }
-        };
-		request( opts, function( err, res, body ) {
-			profile = JSON.parse( body );
-			if ( profile && profile.entry ) {
-				var p = profile.entry[0];
-				user.name = ( p.displayName && p.displayName ) || user.email;
-				user.picture = 'https://secure.gravatar.com/avatar/' + hash;
-
-				// Re-broadcast
-				app.io.room( req.session.room ).broadcast( 'user', user );
-			}
-		});
-
-		// See if we can get their timezone from Google
-		timezone.getTimeZone(
-			user.location[0],
-			user.location[1],
-			function( err, data ) {
-				if ( !err && 'OK' === data.status ) {
-					user.offset = data.rawOffset / 60 / 60; // hours
-
-					// Re-broadcast
-					app.io.room( req.session.room ).broadcast( 'user', user );
-				}
-			}
-		);
-
-		// Avoid re-requesting this user in this session
-		user.filled = true;
-	}
-
-	// Save in session, broadcast back out to everyone
-	req.session.save( function() {
-		app.io.room( req.session.room ).broadcast( 'user', user );
-	});
+    // Save in session, broadcast back out to everyone
+    populateUserDetails( user ).done( function() {
+      user.filled = true;
+      console.log( 'Broadcast user to room' );
+      req.session.save( function() {
+        app.io.room( req.session.room ).broadcast( 'user', user );
+      });
+    });
+  }
 });
 
 // Receive a message from a user and broadcast it back out to everyone in the room
