@@ -165,7 +165,7 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
     },
 
     redrawMap: function() {
-      return; // @todo BROKEN!
+      return; // @todo Crashes GMaps; need to wait for location?
       console.log( 'MapView:redrawMap' );
       var bounds = new google.maps.LatLngBounds(),
           that = this;
@@ -228,7 +228,6 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
     drawOverlay: function( map ) {
       console.log( 'MapView:drawOverlay' );
       map = map || this.map;
-      // @todo This reduces the flash of "white", but we still get a pulsing effect during redraw
       $( '#dc-overlay' ).fadeOut( 'fast', function() { this.remove(); });
       this.overlay = new DayNightOverlay({ map: map, id: 'dc-overlay' });
     },
@@ -381,8 +380,6 @@ DiscoChat.MessageView = ( function( $, Backbone, _, moment, Handlebars ) {
 
 
 // ChatStreamView -- the entire chat stream, made up of a series of ChatMessageViews
-// @todo listenTo backbone and focus the chat when app is enabled
-// @todo listenTo people collection and post a message when someone is added to it (joins) or departs
 DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
   return Backbone.View.extend({
     collection: DiscoChat.Messages,
@@ -438,6 +435,9 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
     },
 
     joinMessage: function( person ) {
+      if ( this.$el.hasClass( 'disabled' ) ) {
+        return;
+      }
       var name = person.get( 'name' );
       if ( !name.length )
         name = 'Someone';
