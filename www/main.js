@@ -165,6 +165,7 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
     },
 
     redrawMap: function() {
+      return; // @todo BROKEN!
       console.log( 'MapView:redrawMap' );
       var bounds = new google.maps.LatLngBounds(),
           that = this;
@@ -251,7 +252,6 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
       }, 600000 );
 
       // Immediately kick off a request to try to get the viewing user's location
-      // @uses var that from above
       // @todo Refine position by monitoring changes?
       navigator.geolocation.getCurrentPosition( function( loc, fail ) {
         that.handleLocation( loc, fail );

@@ -17,12 +17,13 @@
     "handlebars": "^2.0.0-alpha.2",
     "leaflet": "^0.7.2",
     "moment": "2.6.0",
-    "mongo": "0.1.0",
+    "mongoose": "^3.8.9",
     "normalize.css": "^3.0.1",
     "q": "^1.0.1",
     "request": "2.34.0",
     "requirejs": "^2.1.11",
-    "timezoner": "0.1.7"
+    "timezoner": "0.1.7",
+    "underscore": "^1.6.0"
   },
   "scripts": {
     "start": "node app.js"
