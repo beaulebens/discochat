@@ -42,12 +42,13 @@ body {
   z-index: 10; /* make sure it's above the overlay */
 }
 #dc-chat {
-  width: 400px; /* @todo should be max-width, once there's something in there to give it shape */
+  max-width: 400px; /* @todo should be max-width, once there's something in there to give it shape */
   float: right;
   position: absolute;
-  top: 2%;
-  bottom: 2%;
-  right: 1%;
+  top: 15px;
+  right: 15px;
+  bottom: 30px;
+  margin-left: 15px;
   z-index: 10; /* make sure it's above the overlay */
 }
 #log {

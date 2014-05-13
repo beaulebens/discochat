@@ -144,8 +144,8 @@ db.once( 'open', function() {
 
     // Load and send back previous 'x' chat messages for this room
     var RoomChats = new Chat({ room: req.session.room });
-    RoomChats.getRecent( 3, function( err, data ) {
-      _.each( data, function( message ) {
+    RoomChats.getRecent( 10, function( err, data ) {
+      _.each( data.reverse(), function( message ) {
         User.getByEmail( req.session.room, message.user, function( err, user ) {
           if ( user ) {
             message.user = user[0].toJSON();
