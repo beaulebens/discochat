@@ -165,26 +165,25 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
     },
 
     redrawMap: function() {
-      return; // @todo Crashes GMaps; need to wait for location?
+      // return; // @todo Crashes GMaps; need to wait for location?
       console.log( 'MapView:redrawMap' );
-      var bounds = new google.maps.LatLngBounds(),
+      var bounds = [],
           that = this;
       this.people.each( function( person ) {
-        if ( ! person ) {
+        if ( ! person || ! person.get( 'location' ) || ! person.get( 'location' )[0] ) {
           return;
         }
 
         console.log( ' - ' + person.get( 'location' )[0] + ', ' + person.get( 'location' )[1] );
 
         // Create a point for their location
-        var point = new google.maps.LatLng( person.get( 'location' )[0], person.get( 'location' )[1] );
+        var point = new L.LatLng( person.get( 'location' )[0], person.get( 'location' )[1] );
+        bounds.push( point );
 
         // Create custom marker (pin + gravatar)
-        var marker = new google.maps.Marker({
-          position: point,
-          map: that.map,
+        var marker = new L.marker( point, {
           title: person.get( 'name' )
-        });
+        }).addTo( that.map );
 
         // Create window to attach to marker
         // var infoWin = new google.maps.InfoWindow({
@@ -193,14 +192,13 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
         //   pixelOffset: new google.maps.Size( 0, 0 ),
         //   maxWidth : 300
         // });
-
-        // Extend the bounds of our map to include this point
-        bounds.extend( point );
       });
 
       // Now fit the bounds of all points into the map (if there are any)
-      if ( ! bounds.isEmpty() ) {
-        this.map.fitBounds( bounds );
+      if ( bounds.length ) {
+        this.map.fitBounds( bounds, {
+          paddingBottomRight: [ 400, 0 ]
+        } );
       }
     },
 
@@ -225,21 +223,29 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
       }
     },
 
-    drawOverlay: function( map ) {
+    drawOverlay: function() {
       console.log( 'MapView:drawOverlay' );
-      map = map || this.map;
-      $( '#dc-overlay' ).fadeOut( 'fast', function() { this.remove(); });
-      this.overlay = new DayNightOverlay({ map: map, id: 'dc-overlay' });
+      this.overlay = L.terminator().addTo( this.map );
+    },
+
+    updateOverlay: function() {
+      var t2 = L.terminator();
+      this.overlay.setLatLngs( t2.getLatLngs() );
+      this.overlay.redraw();
     },
 
     render: function() {
       console.log( 'MapView:render' );
       // Set up the map and center it on 0,0 for now
-      var mapOptions = {
-        center: new google.maps.LatLng( 0, 0 ),
-        zoom: 2
-      };
-      this.map = new google.maps.Map( document.getElementById( this.id ), mapOptions );
+      this.map = L.map( this.id, {
+        center: [ 0, 0 ],
+        zoom: 13
+      });
+
+      L.tileLayer('http://openmapsurfer.uni-hd.de/tiles/roads/x={x}&y={y}&z={z}', {
+        attribution: 'Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> &mdash; Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+        detectRetina: true
+      }).addTo( this.map );
 
       var that = this;
 
@@ -247,8 +253,8 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
       // keep it moving on open sessions.
       this.drawOverlay();
       this.redrawOverlay = setInterval( function() {
-        that.drawOverlay();
-      }, 600000 );
+        that.updateOverlay();
+      }, 10000 );
 
       // Immediately kick off a request to try to get the viewing user's location
       // @todo Refine position by monitoring changes?
