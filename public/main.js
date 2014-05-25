@@ -452,7 +452,7 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
     },
 
     scrollToBottom: function() {
-      this.$( '#log' ).animate({
+      this.$( '#log' ).stop().animate({
         scrollTop: $( '#log' )[0].scrollHeight
       }, 500 );
     },
