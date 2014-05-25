@@ -31,10 +31,10 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
     initialize: function( options ) {
       console.log( 'App:initialize' );
       this.io       = options.io; // required
-      this.me       = options.me     || new DiscoChat.Person();
+      this.room     = this.getRoom();
+      this.me       = options.me     || new DiscoChat.Person( { room: this.room } );
       this.people   = options.people || new DiscoChat.People( [ this.me ] );
       this.messages = options.messages || new DiscoChat.Messages();
-      this.room     = this.getRoom();
       this.map = new DiscoChat.MapView({
         el:     '#dc-map',
         me:     this.me,
@@ -142,8 +142,9 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
 
     initialize: function( options ) {
       console.log( 'MapView:initialize' );
-      this.me     = options.me;
-      this.people = options.people;
+      this.me      = options.me;
+      this.people  = options.people;
+      this.markers = [];
 
       // Set up listeners
       this.listenTo( Backbone,    'disable-app', this.disableApp );
@@ -164,13 +165,28 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
       this.$el.removeClass( 'disabled' );
     },
 
+    mapMarker: function( user ) {
+      return new L.HtmlIcon({
+          html:  '<div class="map-marker"><img src="' + user.get( 'picture' ) + '?s=120" width="60" height="60" border="0" />',
+          title: user.get( 'name' )
+      });
+    },
+
     redrawMap: function() {
       // return; // @todo Crashes GMaps; need to wait for location?
       console.log( 'MapView:redrawMap' );
       var bounds = [],
           that = this;
+
+      // Remove markers, so we can re-draw them all
+      // @todo diff the arrays instead of complete re-draw?
+      _.each( this.markers, function( marker ) {
+        that.map.removeLayer( marker );
+      });
+      this.markers = [];
+
       this.people.each( function( person ) {
-        if ( ! person || ! person.get( 'location' ) || ! person.get( 'location' )[0] ) {
+        if ( ! person || !person.get( 'location' ) || !person.get( 'location' )[0] ) {
           return;
         }
 
@@ -182,8 +198,10 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
 
         // Create custom marker (pin + gravatar)
         var marker = new L.marker( point, {
-          title: person.get( 'name' )
+          title: person.get( 'name' ),
+          icon: that.mapMarker( person )
         }).addTo( that.map );
+        that.markers.push( marker );
 
         // Create window to attach to marker
         // var infoWin = new google.maps.InfoWindow({
@@ -249,15 +267,13 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
 
       var that = this;
 
-      // Draw the overlay now, and schedle it to redraw periodically to
-      // keep it moving on open sessions.
+      // Draw the overlay now, and schedule it to redraw periodically
       this.drawOverlay();
       this.redrawOverlay = setInterval( function() {
         that.updateOverlay();
       }, 10000 );
 
-      // Immediately kick off a request to try to get the viewing user's location
-      // @todo Refine position by monitoring changes?
+      // Kick off a request to try to get the viewing user's location
       navigator.geolocation.getCurrentPosition( function( loc, fail ) {
         that.handleLocation( loc, fail );
       });

@@ -56,6 +56,7 @@ body {
   overflow-y: scroll;
   height: 100%;
   padding-bottom: 61px;
+  margin-top: 2px; /* give a buffer to the top border on scroll */
 }
 #log .avatar {
   border-radius: 50%;
@@ -67,6 +68,8 @@ body {
   border-top: solid 1px #ccc;
   padding: 5px 8px;
   background: #fff;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
 }
 #message {
   width: 100%;
@@ -78,6 +81,10 @@ body {
 .dc-message {
   margin: 0 0 30px 0;
 }
+.message {
+  text-shadow: 0 0 1px #111;
+  line-height: 1.2em;
+}
 .dc-message .message-container {
   margin: 0 50px 0 0px;
 }
@@ -86,8 +93,7 @@ body {
 }
 .dc-message .tail {
   float: right;
-  background: #888;
-  color: #fff;
+  background: #489dff;
   width: 10px;
   height: 20px;
   margin-right: 5px;
@@ -97,7 +103,6 @@ body {
   float: left;
   margin-left: 5px;
   background: #eee;
-  color: #888;
 }
 .dc-message .tail span {
   display: block;
@@ -124,7 +129,7 @@ body {
   float: left;
 }
 .dc-message .message {
-  background: #888;
+  background: #489dff;
   color: #fff;
   border-radius: 10px;
   padding: 10px;
@@ -133,7 +138,7 @@ body {
 .dc-message.me .message {
   margin: 0 0 0 15px;
   background: #eee;
-  color: #888;
+  color: #222;
 }
 .dc-message .utc {
   float: right;
@@ -158,4 +163,15 @@ body {
   font-size: 11px;
   color: #888;
   text-align: center;
+}
+.map-marker {
+  position: absolute;
+  background: url( /img/disco-chat-pin.png );
+  width: 75px;
+  height: 90px;
+  padding: 8px;
+  margin: -90px 0 0 -37.5px; /* based on disco-chat-pin.png dims */
+}
+.map-marker img {
+  border-radius: 50%;
 }

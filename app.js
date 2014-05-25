@@ -18,7 +18,7 @@ var expio    = require( 'express.io' ),
 
 // Configure Express/Socket app
 app.http().io();
-app.use( expio.static( __dirname + '/www' ) );
+app.use( expio.static( __dirname + '/public' ) );
 app.use( expio.cookieParser() );
 app.use( expio.session({ secret: 'dfvn23589e8fvihsk,j3rcmhrv^%hjvbdjhbv' }) );
 
@@ -99,7 +99,7 @@ userSchema.statics.getByEmail = function( room, email, callback ) {
     .find({ room: room, email: email })
     .limit( 1 )
     .exec( callback );
-}
+};
 var User = mongoose.model( 'User', userSchema );
 
 var chatSchema = mongoose.Schema({
@@ -125,7 +125,7 @@ var db = mongoose.connection;
 db.once( 'open', function() {
   // For all requests, send back our index
   app.all( '*', function( req, res ) {
-    res.sendfile( __dirname + '/www/index.html' );
+    res.sendfile( __dirname + '/public/index.html' );
   });
 
   // Ready event sent when we know which room we want to connect to
