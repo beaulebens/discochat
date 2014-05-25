@@ -1,3 +1,4 @@
+/* Page + App Layout */
 * {
   box-sizing: border-box;
 }
@@ -78,12 +79,18 @@ body {
   border: 0;
   font-size: 16px;
 }
+
+/* Chat Messages */
 .dc-message {
   margin: 0 0 30px 0;
 }
 .message {
   text-shadow: 0 0 1px #111;
   line-height: 1.2em;
+}
+.system .message,
+.me .message {
+  text-shadow: none;
 }
 .dc-message .message-container {
   margin: 0 50px 0 0px;
@@ -164,9 +171,12 @@ body {
   color: #888;
   text-align: center;
 }
+
+/* Map Markers: "Large" (default), Medium (75% of large) and Small (50% of large) */
 .map-marker {
   position: absolute;
   background: url( /img/disco-chat-pin.png );
+  background-size: 100%;
   width: 75px;
   height: 90px;
   padding: 8px;
@@ -174,4 +184,26 @@ body {
 }
 .map-marker img {
   border-radius: 50%;
+  width: 60px;
+  height: 60px;
+}
+.map-marker.medium {
+  width: 56.25px;
+  height: 67.5px;
+  margin: -28.125px 0 0 -33.75px;
+  padding: 5px;
+}
+.map-marker.medium img {
+  width: 45px;
+  height: 45px;
+}
+.map-marker.small {
+  width: 37.5px;
+  height: 44px;
+  margin: -18.75px 0 0 -22.5px;
+  padding: 3px;
+}
+.map-marker.small img {
+  width: 30px;
+  height: 30px;
 }

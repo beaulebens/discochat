@@ -167,7 +167,7 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
 
     mapMarker: function( user ) {
       return new L.HtmlIcon({
-          html:  '<div class="map-marker"><img src="' + user.get( 'picture' ) + '?s=120" width="60" height="60" border="0" />',
+          html:  '<div class="map-marker"><img src="' + user.get( 'picture' ) + '?s=120" border="0" />',
           title: user.get( 'name' )
       });
     },
@@ -416,6 +416,7 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
 
       this.listenTo( Backbone,        'enable-app',  this.focusChat        );
       this.listenTo( Backbone,        'enable-app',  this.enableApp        );
+      this.listenTo( Backbone,        'enable-app',  this.joinMessage      );
       this.listenTo( Backbone,        'disable-app', this.disableApp       );
       this.listenTo( this.collection, 'add',         this.renderMessage    );
       this.listenTo( this.people,     'add',         this.joinMessage      );
@@ -460,9 +461,13 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       if ( this.$el.hasClass( 'disabled' ) ) {
         return;
       }
-      var name = person.get( 'name' );
-      if ( !name.length )
-        name = 'Someone';
+      var name = 'You';
+      if ( person ) {
+        name = person.get( 'name' );
+        if ( !name.length ) {
+          name = 'Someone';
+        }
+      }
       var message = new DiscoChat.Message({
             message: name + ' joined the chat.' // @todo i18n
           }),
