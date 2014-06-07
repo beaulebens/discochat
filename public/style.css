@@ -172,7 +172,12 @@ body {
   text-align: center;
 }
 
-/* Map Markers: "Large" (default), Medium (75% of large) and Small (50% of large) */
+/*
+  Map Markers:
+    "Large" (default)
+    "Medium" (75% of large)
+    "Small" (50% of large)
+*/
 .map-marker {
   position: absolute;
   background: url( /img/disco-chat-pin.png );

@@ -30,6 +30,7 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
   return Backbone.Router.extend({
     initialize: function( options ) {
       console.log( 'App:initialize' );
+      var self      = this;
       this.io       = options.io; // required
       this.room     = this.getRoom();
       this.me       = options.me     || new DiscoChat.Person( { room: this.room } );
@@ -53,17 +54,23 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
       // Connect to room and render everyone
       this.io.emit( 'ready', this.room );
 
+      // Ping the server every 30 secs to say we're still here
+      this.pinger = setInterval( ( function( self ) {
+        return function() {
+          self.pingServer();
+        };
+      } )( this ), 30000 );
+
       // Listen for changes to me, and send them to the server
       this.listenTo( this.me, 'change', this.sendMeToServer );
 
       // Listen for incoming data and handle it
-      var that = this;
       this.io.on( 'user', function( data ) {
-        that.addPerson( data );
+        self.addPerson( data );
       });
 
       this.io.on( 'message', function( data ) {
-        that.addMessage( data );
+        self.addMessage( data );
       });
     },
 
@@ -122,6 +129,11 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
       }
     },
 
+    pingServer: function() {
+      console.log( 'App:pingServer' );
+      this.io.emit( 'ping', {} );
+    },
+
     start: function( options ) {
       console.log( 'App:start' );
       this.map.render();
@@ -167,21 +179,20 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
 
     mapMarker: function( user ) {
       return new L.HtmlIcon({
-          html:  '<div class="map-marker"><img src="' + user.get( 'picture' ) + '?s=120" border="0" />',
+          html:  '<div class="map-marker small"><img src="' + user.get( 'picture' ) + '?s=120" border="0" />',
           title: user.get( 'name' )
       });
     },
 
     redrawMap: function() {
-      // return; // @todo Crashes GMaps; need to wait for location?
       console.log( 'MapView:redrawMap' );
       var bounds = [],
-          that = this;
+          self = this;
 
       // Remove markers, so we can re-draw them all
       // @todo diff the arrays instead of complete re-draw?
       _.each( this.markers, function( marker ) {
-        that.map.removeLayer( marker );
+        self.map.removeLayer( marker );
       });
       this.markers = [];
 
@@ -199,9 +210,9 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
         // Create custom marker (pin + gravatar)
         var marker = new L.marker( point, {
           title: person.get( 'name' ),
-          icon: that.mapMarker( person )
-        }).addTo( that.map );
-        that.markers.push( marker );
+          icon: self.mapMarker( person )
+        }).addTo( self.map );
+        self.markers.push( marker );
 
         // Create window to attach to marker
         // var infoWin = new google.maps.InfoWindow({
@@ -254,6 +265,7 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
 
     render: function() {
       console.log( 'MapView:render' );
+      var self = this;
       // Set up the map and center it on 0,0 for now
       this.map = L.map( this.id, {
         center: [ 0, 0 ],
@@ -265,17 +277,15 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
         detectRetina: true
       }).addTo( this.map );
 
-      var that = this;
-
       // Draw the overlay now, and schedule it to redraw periodically
       this.drawOverlay();
       this.redrawOverlay = setInterval( function() {
-        that.updateOverlay();
+        self.updateOverlay();
       }, 10000 );
 
       // Kick off a request to try to get the viewing user's location
       navigator.geolocation.getCurrentPosition( function( loc, fail ) {
-        that.handleLocation( loc, fail );
+        self.handleLocation( loc, fail );
       });
 
       return this;
@@ -390,7 +400,6 @@ DiscoChat.MessageView = ( function( $, Backbone, _, moment, Handlebars ) {
 
       this.$el.html( template({ data: message }) );
 
-      var that = this;
       this.$( '.moment' ).each( function( index ) {
         $( this ).html( moment( $( this ).data( 'moment' ) ).fromNow() );
       });
@@ -408,6 +417,7 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
 
     initialize: function( options ) {
       console.log( 'ChatStreamView:initialize' );
+      var self        = this;
       this.io         = options.io;
       this.me         = options.me;
       this.people     = options.people;
@@ -421,13 +431,12 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       this.listenTo( this.collection, 'add',         this.renderMessage    );
       this.listenTo( this.people,     'add',         this.joinMessage      );
 
-      var that = this;
       this.io.on( 'part', function( data ) {
-        that.partMessage( data );
+        self.partMessage( data );
       });
 
       setInterval( function() {
-        that.$( '.moment' ).each( function( index ) {
+        self.$( '.moment' ).each( function( index ) {
           $( this ).html( moment( $( this ).data( 'moment' ) ).fromNow() );
         });
       }, 15000 );

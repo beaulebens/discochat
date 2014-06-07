@@ -10,6 +10,7 @@
 - Implement "chat-stacking"
 - Implement animations for everything (see below)
 - Render messages in correct order during initial load (sort based on time)
+- "Reclaim" messages that are mine in the stream, and flip them to render properly
 - Fix join messages (ignore if users were loaded during initial bootstrap)
 - Handle `*`, `\`, `/me`
 - Autolink URLs

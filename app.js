@@ -85,7 +85,8 @@ var userSchema = mongoose.Schema({
   location: Array,
   picture:  String,
   offset:   Number,
-  filled:   Boolean
+  filled:   Boolean,
+  lastSeen: { type: Date, default: Date.now }
 });
 userSchema.methods.getUsersInRoom = function( callback ) {
   return this
@@ -184,11 +185,23 @@ db.once( 'open', function() {
     }
   });
 
+  // Handle periodic pings from users that keep track of if they're still there
+  app.io.route( 'ping', function( req ) {
+    if ( !req.session.user ) {
+      return;
+    }
+
+    // @todo Update lastSeen on the requesting user
+    console.log( 'Pinged by', req.session.user.email );
+  });
+
   // Receive a message from a user and broadcast it back out to everyone in the room
   app.io.route( 'say', function( req ) {
     if ( '/' === req.data.message.substr( 0, 1 ) ) {
-      // @todo Handle commands
+      // @todo Handle server-side commands
     } else {
+      // @todo Update lastSeen on the user who said this
+
       // Broadcast to room
       var message = {
         message: req.data.message,
