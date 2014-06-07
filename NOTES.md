@@ -1,3 +1,24 @@
+# TODO
+## Next
+- Add `lastSeen` to user models/DB
+- Update `lastSeen` on join, part, and ping
+
+## Later
+- Use `lastSeen` to control visibility of markers
+- Come up with better markers
+- Include local time/name on markers
+- Implement "chat-stacking"
+- Implement animations for everything (see below)
+- Render messages in correct order during initial load (sort based on time)
+- Fix join messages (ignore if users were loaded during initial bootstrap)
+- Handle `*`, `\`, `/me`
+- Autolink URLs
+- Auto-embed image URLs
+
+## Maybe
+- Drag/drop media upload (direct to Cloudup?)
+- Cloudup URL embeds
+
 # Research Points
 * app.all vs app.io.all usage?
 * config module to get details from package.json? version in user agent
@@ -17,15 +38,15 @@
 1. Slidedown a banner explaining the Location request (if not already authorized)
 1. Slideup banner once Location request is authorized
 1. Zoom-spin the Settings cog into view (top-left)
-1. Fadeout-and-shrink email dialog once details are entered
-1. Fadeout-and-remove 'canvas' to reveal map
-1. Bubble-pop map marker (if possible) into view (Location pin with round Gravatar overlay)
-1. Slidedown banner telling user to share URL with others, slideup/hide after 10 seconds
+1. Shrink-and-fade email dialog once details are entered
+1. Fadeout 'canvas' to reveal map
+1. Bubble-pop my map marker (if possible) into view (Location pin with round Gravatar overlay)
+1. Slidedown banner telling user to share URL with others
 
-## User Join
+## User Join (or load existing chat history)
 1. If there is no chat panel yet; slide chat panel in from the right
 1. Rezoom/center the map to account for the chat panel + new user's position, then
-1. Bubble-pop their marker into view
+1. Bubble-pop their marker into view (or multiple)
 
 ## Chat
 1. Messages always appear at the bottom of the chat stream
@@ -40,17 +61,11 @@
 
 ## User Depart
 1. Auto-message: "<name> has left the room."
-1. Animate Gravatar to grayscale in chat
-1. Fade map marker to grayscale
+1. Animate their Gravatar to grayscale in chat history
+1. Fade map marker to grayscale, set timer for 1 minute, then...
 1. Fade-and-remove marker from map
 
 ## Chat Functions
-### Drag & Drop
-1. Drag files over area (editor or stream)
-1. Highlight border, "glow" effect, message "Drop media here to post to the room."
-1. Animate progress bar across the top border of the chat message box
-1. Embed via Cloudup embed once complete?
-
 ### URL Handling
 - Image URLs should be converted to Photon-resized/constrained inline images
 - Other URLs:
@@ -58,6 +73,12 @@
  - GET requests and parse headers for others; embed a visual block
 
 ### Commands
-- Any chat message starting with '/' is treated as a command
-- Unknown? Send back "message" as "I don't recognize '<command>'."
+- Any chat message starting with `/` is treated as a command
+- Unknown? Send back "message" as "I don't recognize `<command>`."
 - If known, use command name to hand off payload to command handler
+
+### Drag & Drop
+1. Drag files over area (editor or stream)
+1. Highlight border, "glow" effect, message "Drop media here to post to the room."
+1. Animate progress bar across the top border of the chat message box
+1. Embed via Cloudup embed once complete?
