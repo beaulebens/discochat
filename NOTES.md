@@ -1,17 +1,16 @@
 # TODO
 ## Next
-- Add `lastSeen` to user models/DB
-- Update `lastSeen` on join, part, and ping
+- Use `lastSeen` to control initial rendering of markers
+- Use `lastSeen` to control visibility of markers over time
+- Fix join messages (ignore if users were loaded during initial bootstrap)
 
 ## Later
-- Use `lastSeen` to control visibility of markers
-- Come up with better markers
+- Refine markers
 - Include local time/name on markers
-- Implement "chat-stacking"
+- Implement "message-stacking"
 - Implement animations for everything (see below)
 - Render messages in correct order during initial load (sort based on time)
 - "Reclaim" messages that are mine in the stream, and flip them to render properly
-- Fix join messages (ignore if users were loaded during initial bootstrap)
 - Handle `*`, `\`, `/me`
 - Autolink URLs
 - Auto-embed image URLs
@@ -22,7 +21,7 @@
 
 # Research Points
 * app.all vs app.io.all usage?
-* config module to get details from package.json? version in user agent
+* config module to read details from package.json? version in user agent
 * Good main app "controller" when you don't need an actual Router?
 * Socket.io stuff mixed into Backbone views? Seems super-wrong?
 * Socket.io sessions/objects and how to keep track of rooms/clients per connection

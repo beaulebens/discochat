@@ -9,8 +9,8 @@
 \******************************************************************************/
 var expio    = require( 'express.io' ),
     request  = require( 'request'    ),
-		crypto   = require( 'crypto/md5' ),
-		timezone = require( 'timezoner'  ),
+    crypto   = require( 'crypto/md5' ),
+    timezone = require( 'timezoner'  ),
     Q        = require( 'q'          ),
     _        = require( 'underscore' ),
     mongoose = require( 'mongoose'   ),
@@ -27,7 +27,10 @@ app.use( expio.session({ secret: 'dfvn23589e8fvihsk,j3rcmhrv^%hjvbdjhbv' }) );
 
 // Call this to fill out a profile based on an email only
 var populateUserDetails = function( user ) {
-  return Q.all([ getUserProfile( user ), getUserTimezone( user ) ]);
+  return Q.all([ getUserProfile( user ), getUserTimezone( user ) ]).catch( function( e ) {
+    if ( e )
+      console.log( e );
+  });
 };
 
 // Get a user's profile from Gravatar, based on email address
@@ -77,7 +80,8 @@ var getUserTimezone = function( user ) {
 };
 
 
-// Mongo Schemas
+// Mongo Schemas and DB functions
+
 var userSchema = mongoose.Schema({
   room:     String,
   email:    String,
@@ -118,6 +122,30 @@ chatSchema.methods.getRecent = function( num, callback ) {
     .exec( callback );
 };
 var Chat = mongoose.model( 'Chat', chatSchema );
+
+var findUpdateAndBroadcastUser = function( search, update, req, app ) {
+  if ( req && req.session && req.session.room ) {
+    search.room = req.session.room; // Force searches to this room
+  }
+  // Find existing user and update, or insert a new user to Mongo
+  User.findOneAndUpdate(
+    search,
+    update,
+    { upsert: true },
+    function( err, updated ) {
+      // If a request object is provided, then update session details
+      if ( req ) {
+        req.session.user = updated;
+        req.session.save( function() {
+          // If an app object is provided, broadcast saved/updated details back out to room
+          if ( app ) {
+            app.io.room( req.session.room ).broadcast( 'user', updated );
+          }
+        });
+      }
+    }
+  );
+};
 
 
 // Connect to Mongo and then we're ready to party
@@ -161,26 +189,23 @@ db.once( 'open', function() {
   // Set up their user details, broadcast them to the room
   app.io.route( 'join', function( req ) {
     var user = req.data.user;
-    req.session.user = user;
 
     // Try to populate user info if it's not available already
     if ( !user.filled ) {
       // Save in session, broadcast back out to everyone
       populateUserDetails( user ).done( function() {
         user.filled = true;
-        req.session.save( function() {
-          // Broadcast back out to room
-          app.io.room( req.session.room ).broadcast( 'user', user );
+        user.lastSeen = Date.now();
 
-          // Save to Mongo if not there already (based on email address)
-          User.getByEmail( req.session.room, user.email, function( err, found ) {
-            if ( !found.length ) {
-              user.room = req.session.room;
-              var thisUser = new User( user );
-              thisUser.save();
-            }
-          });
-        });
+        findUpdateAndBroadcastUser(
+          {
+            room: req.session.room,
+            email: user.email
+          },
+          user,
+          req,
+          app
+        );
       });
     }
   });
@@ -190,6 +215,17 @@ db.once( 'open', function() {
     if ( !req.session.user ) {
       return;
     }
+
+    // Find and update this user's lastSeen
+    findUpdateAndBroadcastUser(
+      {
+        room: req.session.room,
+        email: req.session.user.email
+      },
+      { lastSeen: Date.now() },
+      req,
+      app
+    );
 
     // @todo Update lastSeen on the requesting user
     console.log( 'Pinged by', req.session.user.email );
@@ -215,6 +251,17 @@ db.once( 'open', function() {
       message.user = message.user.email; // Just store the email so we can look it up later
       var thisChat = new Chat( message );
       thisChat.save();
+
+      // Find and update this user's lastSeen
+      findUpdateAndBroadcastUser(
+        {
+          room: req.session.room,
+          email: req.session.user.email
+        },
+        { lastSeen: Date.now() },
+        req,
+        app
+      );
     }
   });
 
