@@ -1,13 +1,10 @@
 # TODO
 ## Next
-- Use `lastSeen` to control initial rendering of markers
-- Use `lastSeen` to control visibility of markers over time
-- Fix join messages (ignore if users were loaded during initial bootstrap)
+- Include local time/name on markers
 
 ## Later
-- Refine markers
-- Include local time/name on markers
 - Implement "message-stacking"
+- Refine markers
 - Implement animations for everything (see below)
 - Render messages in correct order during initial load (sort based on time)
 - "Reclaim" messages that are mine in the stream, and flip them to render properly

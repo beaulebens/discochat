@@ -90,7 +90,7 @@ var userSchema = mongoose.Schema({
   picture:  String,
   offset:   Number,
   filled:   Boolean,
-  lastSeen: { type: Date, default: Date.now }
+  lastSeen: Date
 });
 userSchema.methods.getUsersInRoom = function( callback ) {
   return this
@@ -172,6 +172,7 @@ db.once( 'open', function() {
     } );
 
     // Load and send back previous 'x' chat messages for this room
+    // The client will handle rendering them in the correct order
     var RoomChats = new Chat({ room: req.session.room });
     RoomChats.getRecent( 100, function( err, data ) {
       _.each( data.reverse(), function( message ) {
@@ -267,6 +268,15 @@ db.once( 'open', function() {
 
   // When a user disconnects, let everyone in that room know
   app.io.route( 'disconnect', function( req ) {
+    // Find and update this user's lastSeen
+    findUpdateAndBroadcastUser(
+      {
+        room: req.session.room,
+        email: req.session.user.email
+      },
+      { lastSeen: null },
+      req
+    );
     app.io.room( req.session.room ).broadcast( 'part', req.session.user );
     console.log( 'Client disconnected from ' + req.session.room );
   });

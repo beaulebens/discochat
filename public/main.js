@@ -34,7 +34,7 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
       this.io       = options.io; // required
       this.room     = this.getRoom();
       this.me       = options.me     || new DiscoChat.Person( { room: this.room } );
-      this.people   = options.people || new DiscoChat.People( [ this.me ] );
+      this.people   = options.people || new DiscoChat.People();
       this.messages = options.messages || new DiscoChat.Messages();
       this.map = new DiscoChat.MapView({
         el:     '#dc-map',
@@ -51,7 +51,7 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
       });
       window.history.pushState( '', 'DiscoChat', '/' + this.room );
 
-      // Connect to room and render everyone
+      // Connect to room and say we're ready for info
       this.io.emit( 'ready', this.room );
 
       // Ping the server every 30 secs to say we're still here
@@ -72,6 +72,10 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
       this.io.on( 'message', function( data ) {
         self.addMessage( data );
       });
+
+      this.io.on( 'part', function( data ) {
+        self.markPersonAsGone( data );
+      });
     },
 
     addPerson: function( person ) {
@@ -84,11 +88,24 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
         console.log( ' - Add new ' + person.email );
         this.people.add( person, { merge: true });
       }
+
+      // It's me, update my details from the server
+      if ( person.email === this.me.get( 'email' ) ) {
+        this.me.set( person );
+      }
     },
 
     addMessage: function( message ) {
       console.log( 'App:addMessage' );
       this.messages.add( message );
+    },
+
+    markPersonAsGone: function( person ) {
+      console.log( 'App:markPersonAsGone' );
+      var found = this.people.findWhere({ email: person.email });
+      if ( found ) {
+        found.set( 'lastSeen', null );
+      }
     },
 
     getRoom: function( options ) {
@@ -178,8 +195,14 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
     },
 
     mapMarker: function( user ) {
+      // Add a special class if it's been a little while since we saw them
+      var away = '';
+      if ( moment( user.get( 'lastSeen' ) ).add( 'minutes', 15 ) < moment() ) {
+        away = ' away';
+      }
+
       return new L.HtmlIcon({
-          html:  '<div class="map-marker small"><img src="' + user.get( 'picture' ) + '?s=120" border="0" />',
+          html:  '<div class="map-marker small' + away + '"><img src="' + user.get( 'picture' ) + '?s=120" border="0" />',
           title: user.get( 'name' )
       });
     },
@@ -198,6 +221,16 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
 
       this.people.each( function( person ) {
         if ( ! person || !person.get( 'location' ) || !person.get( 'location' )[0] ) {
+          return;
+        }
+
+        // No marker if we don't know when they were last on
+        if ( !person.get( 'lastSeen' ) ) {
+          return;
+        }
+
+        // Don't add marker if this user hasn't been seen in a while
+        if ( moment( person.get( 'lastSeen' ) ).add( 'hours', 1 ) < moment() ) {
           return;
         }
 
@@ -467,15 +500,24 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
     },
 
     joinMessage: function( person ) {
+      if ( !person ) {
+        return;
+      }
+
+      // Don't show join messages while the app is diabled
       if ( this.$el.hasClass( 'disabled' ) ) {
         return;
       }
+
+      // Don't show if this user hasn't been seen in a while
+      if ( !person.get( 'lastSeen' ) || moment( person.get( 'lastSeen' ) ).add( 'hours', 1 ) < moment() ) {
+        return;
+      }
+
       var name = 'You';
-      if ( person ) {
-        name = person.get( 'name' );
-        if ( !name.length ) {
-          name = 'Someone';
-        }
+      name = person.get( 'name' );
+      if ( !name.length ) {
+        name = 'Someone';
       }
       var message = new DiscoChat.Message({
             message: name + ' joined the chat.' // @todo i18n
