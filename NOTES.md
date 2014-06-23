@@ -1,16 +1,14 @@
 # TODO
 ## Next
-- Include local time/name on markers
+- Include local time/name on markers/infowindows
 
 ## Later
-- Implement "message-stacking"
-- Refine markers
+- Implement "message-stacking" if messages occur consecutively, and within 3 minutes of each other
 - Implement animations for everything (see below)
-- Render messages in correct order during initial load (sort based on time)
-- "Reclaim" messages that are mine in the stream, and flip them to render properly
-- Handle `*`, `\`, `/me`
-- Autolink URLs
+- Fix Join messages
 - Auto-embed image URLs
+- Autolink URLs
+- Refine markers
 
 ## Maybe
 - Drag/drop media upload (direct to Cloudup?)

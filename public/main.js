@@ -460,6 +460,7 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       this.listenTo( Backbone,        'enable-app',  this.focusChat        );
       this.listenTo( Backbone,        'enable-app',  this.enableApp        );
       this.listenTo( Backbone,        'enable-app',  this.joinMessage      );
+      this.listenTo( Backbone,        'enable-app',  this.render           );
       this.listenTo( Backbone,        'disable-app', this.disableApp       );
       this.listenTo( this.collection, 'add',         this.renderMessage    );
       this.listenTo( this.people,     'add',         this.joinMessage      );
@@ -560,11 +561,10 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       this.io.emit( 'say', message );
     },
 
+    // Pass scroll:false in options to prevent auto-scrolling
     renderMessage: function( message, options ) {
       console.log( 'ChatStreamView:renderMessage' );
-
-      // @todo Check this against the last one, and if they're by the same person,
-      // then render this one into the end of the other, rather than doing a whole new thing.
+      options = options || {};
 
       var messageView = new DiscoChat.MessageView({
         model: message,
@@ -572,6 +572,7 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
       });
       this.$( '#log' ).append( messageView.render().$el );
 
+      // Maybe scroll to the bottom of the list
       if ( 'undefined' == typeof options.scroll || true === options.scroll ) {
         this.scrollToBottom();
       }
@@ -580,9 +581,15 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
     },
 
     render: function( options ) {
+      console.log( 'ChatStreamView:render' );
+
+      // Start with a clean slate
+      this.$( '#log' ).empty();
+
       // Render any messages we have
-      _.each( this.collection, function( message ) {
-        this.renderMessage( message );
+      var self = this;
+      this.collection.each( function( message ) {
+        self.renderMessage( message );
       });
 
       // Scroll to the bottom
