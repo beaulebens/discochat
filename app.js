@@ -127,6 +127,7 @@ var findUpdateAndBroadcastUser = function( search, update, req, app ) {
   if ( req && req.session && req.session.room ) {
     search.room = req.session.room; // Force searches to this room
   }
+
   // Find existing user and update, or insert a new user to Mongo
   User.findOneAndUpdate(
     search,
@@ -191,24 +192,21 @@ db.once( 'open', function() {
   app.io.route( 'join', function( req ) {
     var user = req.data.user;
 
-    // Try to populate user info if it's not available already
-    if ( !user.filled ) {
-      // Save in session, broadcast back out to everyone
-      populateUserDetails( user ).done( function() {
-        user.filled = true;
-        user.lastSeen = Date.now();
+    // Refresh user info and save
+    // Save in session, broadcast back out to everyone
+    populateUserDetails( user ).done( function() {
+      user.filled = true;
+      user.lastSeen = Date.now();
 
-        findUpdateAndBroadcastUser(
-          {
-            room: req.session.room,
-            email: user.email
-          },
-          user,
-          req,
-          app
-        );
-      });
-    }
+      findUpdateAndBroadcastUser({
+          room: req.session.room,
+          email: user.email
+        },
+        user,
+        req,
+        app
+      );
+    });
   });
 
   // Handle periodic pings from users that keep track of if they're still there
@@ -268,9 +266,12 @@ db.once( 'open', function() {
 
   // When a user disconnects, let everyone in that room know
   app.io.route( 'disconnect', function( req ) {
+    if ( !req.session.user ) {
+      return;
+    }
+
     // Find and update this user's lastSeen
-    findUpdateAndBroadcastUser(
-      {
+    findUpdateAndBroadcastUser({
         room: req.session.room,
         email: req.session.user.email
       },

@@ -90,8 +90,9 @@ DiscoChat.App = ( function( $, Backbone, _ ) {
       }
 
       // It's me, update my details from the server
+      // Silent to avoid infinite loop of updates
       if ( person.email === this.me.get( 'email' ) ) {
-        this.me.set( person );
+        this.me.set( person, { silent: true } );
       }
     },
 
@@ -202,7 +203,7 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
       }
 
       return new L.HtmlIcon({
-          html:  '<div class="map-marker small' + away + '"><img src="' + user.get( 'picture' ) + '?s=120" border="0" />',
+          html:  '<div class="map-marker small' + away + '" data-offset="' + user.get( 'offset' ) + '"><img src="' + user.get( 'picture' ) + '?s=60" border="0" width="30" height="30" />',
           title: user.get( 'name' )
       });
     },
@@ -212,12 +213,13 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
       var bounds = [],
           self = this;
 
-      // Remove markers, so we can re-draw them all
+      // Remove markers + tipsy, so we can re-draw them all
       // @todo diff the arrays instead of complete re-draw?
       _.each( this.markers, function( marker ) {
         self.map.removeLayer( marker );
       });
       this.markers = [];
+      $( '.tipsy' ).remove();
 
       this.people.each( function( person ) {
         if ( ! person || !person.get( 'location' ) || !person.get( 'location' )[0] ) {
@@ -246,15 +248,23 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
           icon: self.mapMarker( person )
         }).addTo( self.map );
         self.markers.push( marker );
-
-        // Create window to attach to marker
-        // var infoWin = new google.maps.InfoWindow({
-        //   content: person.get( 'name' ),
-        //   position: point,
-        //   pixelOffset: new google.maps.Size( 0, 0 ),
-        //   maxWidth : 300
-        // });
       });
+
+      // Put the current time and add tipsy to all map markers
+      $( '.map-marker' ).each(function(){
+        self.$( '.map-marker' ).each( function( index ) {
+          $( this ).attr(
+            'title',
+            $( this ).parent( 'div' ).attr( 'title' )
+            + ' '
+            + moment().zone( $( this ).data( 'offset' ) ).format( 'HH:mm' )
+          );
+        });
+      }).tipsy({
+        gravity: 's',
+        offset: 10,
+        trigger: 'manual' // manually (not hover) trigger tipsy
+      }).tipsy( 'hide' ).tipsy( 'show' ); // and do it now
 
       // Now fit the bounds of all points into the map (if there are any)
       if ( bounds.length ) {
@@ -272,16 +282,15 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
 
     handleLocation: function( loc, fail ) {
       console.log( 'MapView:handleLocation' );
+      var self = this;
       if ( ! fail ) {
         // Store reference to my location and update map
         this.updateMyLocation( loc.coords.latitude, loc.coords.longitude );
 
         // Now watch for refinements to location and send updates to the server (and update position)
-        /*
         navigator.geolocation.watchPosition( function( loc ) {
-          this.updateMyLocation( loc.coords.latitude, loc.coords.longitude );
-        }
-        */
+          self.updateMyLocation( loc.coords.latitude, loc.coords.longitude );
+        } );
       }
     },
 
@@ -305,8 +314,8 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
         zoom: 13
       });
 
-      L.tileLayer('http://openmapsurfer.uni-hd.de/tiles/roads/x={x}&y={y}&z={z}', {
-        attribution: 'Imagery from <a href="http://giscience.uni-hd.de/">GIScience Research Group @ University of Heidelberg</a> &mdash; Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+      L.tileLayer( 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
         detectRetina: true
       }).addTo( this.map );
 
@@ -315,6 +324,13 @@ DiscoChat.MapView = ( function( $, Backbone, _ ) {
       this.redrawOverlay = setInterval( function() {
         self.updateOverlay();
       }, 10000 );
+
+      // Update times for everyone periodically
+      setInterval( function() {
+        self.$( '.map-marker' ).each( function( index ) {
+          $( this ).attr( 'title', $( this ).attr( 'title' ) + ' ' + moment().zone( $( this ).data( 'offset' ) ).format( 'HH:mm' ) );
+        });
+      }, 30000 );
 
       // Kick off a request to try to get the viewing user's location
       navigator.geolocation.getCurrentPosition( function( loc, fail ) {
@@ -358,25 +374,6 @@ DiscoChat.GreetView = ( function( $, Backbone, _ ) {
     }
   });
 })( jQuery, Backbone, _ );
-
-
-// Map
-
-// PersonMarkerView -- the pins on the map
-DiscoChat.PersonMarkerView = ( function( $, Backbone, _, moment ) {
-  return Backbone.View.extend({
-    model: DiscoChat.Person,
-
-    render: function( options ) {
-      return this;
-    }
-  });
-})( jQuery, Backbone, _, moment );
-
-
-// Chat
-
-// PersonChatView -- what a user looks like in chats
 
 // Message -- the model for a single chat message
 DiscoChat.Message = ( function( $, Backbone, _, moment ) {
@@ -469,6 +466,7 @@ DiscoChat.ChatStreamView = ( function( $, Backbone, _ ) {
         self.partMessage( data );
       });
 
+      // Refresh relative time on all messages periodically
       setInterval( function() {
         self.$( '.moment' ).each( function( index ) {
           $( this ).html( moment( $( this ).data( 'moment' ) ).fromNow() );

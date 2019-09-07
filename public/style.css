@@ -209,8 +209,8 @@ body {
 }
 .map-marker.small {
   width: 37.5px;
-  height: 44px;
-  margin: -18.75px 0 0 -22.5px;
+  height: 46px;
+  margin: -46px 0 0 -18.75px;
   padding: 3px;
 }
 .map-marker.small img {

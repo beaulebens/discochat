@@ -5,7 +5,7 @@ To install all the required modules:
 
 `npm install`
 
-and then start the application:
+and then start the application (make sure Mongo is running already):
 
 `npm start`
 
