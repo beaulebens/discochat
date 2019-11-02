@@ -18,7 +18,7 @@
     "jquery.tipsy": "^1.0.2",
     "leaflet": "^0.7.2",
     "moment": "2.6.0",
-    "mongoose": "^3.8.9",
+    "mongoose": "^5.7.7",
     "normalize.css": "^3.0.1",
     "q": "^1.0.1",
     "request": "2.34.0",
